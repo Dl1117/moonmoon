@@ -1,0 +1,142 @@
+// Configure the database
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        String    @id @default(uuid())
+  username  String?
+  password  String?
+  loginId   String?   @unique
+  userType  UserType
+  adminJwt  AdminJwt?
+
+  @@map("admin")
+}
+
+model AdminJwt {
+  id                    String   @id @default(uuid())
+  adminId               String   @unique
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiryDate DateTime?
+  refreshTokenExpiryDate DateTime?
+  admin                 Admin    @relation(fields: [adminId], references: [id])
+
+  @@map("admin_jwt")
+}
+
+
+model Purchase {
+  id               String         @id @default(uuid())
+  supplierId       String?
+  supplierLorryId  String?
+  purchaseStatus   PurchaseStatus
+  purchaseDate     DateTime?
+  purchaseInvoices PurchaseInvoice[]
+  purchaseInfos    PurchaseInfo[]
+
+  @@map("purchase")
+}
+
+model PurchaseInvoice {
+  id         String   @id @default(uuid())
+  image      Bytes?
+  purchaseId String?
+  purchase   Purchase? @relation(fields: [purchaseId], references: [id])
+
+  @@map("purchase_invoice")
+}
+
+model PurchaseInfo {
+  id                 String   @id @default(uuid())
+  pricePerKg         String?
+  kgPurchased        String?
+  totalPurchasePrice String?
+  durianVarietyId    String?
+  purchaseId         String?
+  purchase           Purchase? @relation(fields: [purchaseId], references: [id])
+
+  @@map("purchase_info")
+}
+
+model Supplier {
+  id           String          @id @default(uuid())
+  companyName  String
+  contact      String
+  supplierLorries SupplierLorry[]
+
+  @@map("supplier")
+}
+
+model SupplierLorry {
+  id               String   @id @default(uuid())
+  lorryPlateNumber String
+  supplierId       String
+  supplier         Supplier? @relation(fields: [supplierId], references: [id])
+
+  @@map("supplier_lorry")
+}
+
+model Sales {
+  id           String         @id @default(uuid())
+  companyName  String?
+  salesStatus  SalesStatus
+  salesDate    DateTime?
+  salesInvoices SalesInvoice[]
+  salesInfos   SalesInfo[]
+
+  @@map("sales")
+}
+
+model SalesInvoice {
+  id         String   @id @default(uuid())
+  image      Bytes?
+  purchaseId String?
+  sales      Sales?   @relation(fields: [purchaseId], references: [id])
+
+  @@map("sales_invoice")
+}
+
+model SalesInfo {
+  id              String   @id @default(uuid())
+  pricePerKg      String?
+  kgSales         String?
+  totalSalesValue String?
+  durianVarietyId String?
+  salesId         String?
+  sales           Sales?   @relation(fields: [salesId], references: [id])
+
+
+  @@map("sales_info")
+}
+
+model DurianVariety {
+  id              String   @id @default(uuid())
+  durianCode      String   @unique
+  stockQuantity   Int
+  
+}
+
+// Define enums for user types and purchase/sales statuses
+enum UserType {
+  ADMIN
+  MEMBER
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum SalesStatus {
+  PENDING
+  COMPLETED
+  RETURNED
+}
