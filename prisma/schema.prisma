@@ -22,8 +22,8 @@ model Admin {
 model AdminJwt {
   id                    String   @id @default(uuid())
   adminId               String   @unique
-  accessToken           String?
-  refreshToken          String?
+  accessToken           String? @db.VarChar(255)
+  refreshToken          String? @db.VarChar(255)
   accessTokenExpiryDate DateTime?
   refreshTokenExpiryDate DateTime?
   admin                 Admin    @relation(fields: [adminId], references: [id])
@@ -97,8 +97,8 @@ model Sales {
 model SalesInvoice {
   id         String   @id @default(uuid())
   image      Bytes?
-  purchaseId String?
-  sales      Sales?   @relation(fields: [purchaseId], references: [id])
+  salesId String?
+  sales      Sales?   @relation(fields: [salesId], references: [id])
 
   @@map("sales_invoice")
 }
