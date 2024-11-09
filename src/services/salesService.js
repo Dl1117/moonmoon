@@ -11,7 +11,7 @@ export const createSalesOrder = async (salesInfos) => {
           companyName,
           salesStatus,
           salesDate: new Date(),
-          salesInfo: {
+          salesInfos: {
             create: salesInfo.map(({ durianVarietyId, pricePerKg, kgSales, totalSalesValue }) => ({
               durianVarietyId,
               pricePerKg,
@@ -21,7 +21,7 @@ export const createSalesOrder = async (salesInfos) => {
           }
         },
         include: {
-          salesInfo: true
+          salesInfos: true
         }
       });
     })
@@ -29,22 +29,41 @@ export const createSalesOrder = async (salesInfos) => {
 };
 
 // Create sales invoice
-export const createSalesInvoice = async (salesInvoices) => {
-  return salesInvoices.map(({ salesId, image }) =>
-    prisma.salesInvoice.create({
-      data: {
-        salesId,
-        image
-      }
-    })
-  );
+export const createSalesInvoice = async (salesOrderIdInvoices) => {
+  try {
+
+    console.log("reading purchaseOrderIdInvoices...", salesOrderIdInvoices);
+    const results = await Promise.all(
+      salesOrderIdInvoices.map(image =>
+         prisma.salesInvoice.create({
+           data: {
+            salesId: image.salesId,
+            image: image.image,
+          },
+        })
+       )
+     );
+     return results;
+  } catch (error) {
+     console.error('Error in createPurchaseInvoice service:', error);
+     throw new Error('Failed to create sales invoices');
+   }
 };
 
 // Retrieve all sales
 export const retrieveAllSales = async () => {
-  return prisma.sales.findMany({
+  const sales = await prisma.sales.findMany({
     include: {
-      salesInfo: true
-    }
+      salesInvoices: true,
+    },
   });
+
+  // Convert each image buffer to Base64 for each invoice in each purchase
+  return sales.map(sale => ({
+    ...sale,
+    salesInvoices: sale.salesInvoices.map(invoice => ({
+      ...invoice,
+      image: invoice.image.toString('base64'), // Convert bytes to Base64 string
+    })),
+  }));
 };

@@ -18,7 +18,26 @@ import {
         // Controller to create sales invoice
         export const createSalesInvoiceController = async (req, res) => {
           try {
-            const result = await createSalesInvoice(req.body.salesInvoices);
+
+            const {salesId} = req.body;
+            const salesImages = req.files;
+
+            if (!salesId) {
+              return res.status(400).json({ success: false, message: 'Purchase ID is required' });
+            }
+      
+            // Validate if files are uploaded
+            if (!salesImages || salesImages.length === 0) {
+              return res.status(400).json({ success: false, message: 'No invoice images uploaded' });
+            }
+
+            // Prepare the data to be saved (if required, you can store image buffers in the database)
+          const salesOrderIdInvoices = salesImages.map(file => ({
+            image: file.buffer, // Storing the file buffer in the database
+            salesId, // Linking the invoice to the specific purchaseId
+          }));
+
+            const result = await createSalesInvoice(salesOrderIdInvoices);
             res.status(201).json({ success: true, data: result });
           } catch (error) {
             console.error('Error creating sales invoice:', error);

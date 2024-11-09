@@ -5,7 +5,7 @@ import { createSupplier, getAllSuppliers, getSupplierById } from '../controller/
 import { createPurchaseInvoiceController, createPurchaseOrderController, retrieveAllPurchasesController } from '../controller/purchaseController.js';
 import { createSalesInvoiceController, createSalesOrderController, retrieveAllSalesController } from '../controller/salesController.js';
 import { authenticateJWT } from '../middleware/authMiddleware.js';
-
+import { upload } from '../middleware/mutlerConfig.js';
 const adminRoutes = express.Router();
 
 // Route for admin login
@@ -27,13 +27,13 @@ adminRoutes.get('/supplier/:id', getSupplierById);
 
 // Route for handling purchases
 adminRoutes.post('/create-purchase-order', createPurchaseOrderController);
-adminRoutes.post('/upload-purchase-invoice', createPurchaseInvoiceController);
+adminRoutes.post('/upload-purchase-invoice', upload.array('invoiceImages'), createPurchaseInvoiceController);
 adminRoutes.get('/get-all-purchases', retrieveAllPurchasesController);
 
 
 // Route for handling sales
 adminRoutes.post('/create-sales-order', createSalesOrderController);
-adminRoutes.post('/upload-sales-invoice', createSalesInvoiceController);
+adminRoutes.post('/upload-sales-invoice',upload.array("invoiceImages"), createSalesInvoiceController);
 adminRoutes.get('/get-all-sales', retrieveAllSalesController);
 
 
