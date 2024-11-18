@@ -1,7 +1,9 @@
 import {
           createSalesOrder,
           createSalesInvoice,
-          retrieveAllSales
+          retrieveAllSales,
+          retrieveOutstandingSalesSrv,
+          changeSalesInfoInformation
         } from '../services/salesService.js';
         
         // Controller to create sales order
@@ -55,4 +57,28 @@ import {
             res.status(500).json({ success: false, message: 'Failed to retrieve sales' });
           }
         };
+
+        //SUPERADMIN controller
+export const retrieveOutstandingSalesController = async (req, res) => {
+  try{
+    const outstandingSales = await retrieveOutstandingSalesSrv();
+    res.status(200).json({ success: true, data: outstandingSales });
+
+  }catch (error) {
+    console.error('Error retrieving purchases:', error);
+    res.status(500).json({ success: false, message: 'Failed to retrieve purchases' });
+  }
+}
+
+export const changeSalesInfoInformationController = async (req, res) => {
+  try {
+    console.log("reading purchase info request.body...", req.body);
+    const { salesInfo } = req.body;
+    const result = await changeSalesInfoInformation(salesInfo);
+    res.status(201).json({ success: true, data: result });
+  } catch (error) {
+    console.error('Error creating purchase order:', error);
+    res.status(500).json({ success: false, message: 'Failed to create purchase order' });
+  }
+}
         

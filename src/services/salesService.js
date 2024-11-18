@@ -67,3 +67,107 @@ export const retrieveAllSales = async () => {
     })),
   }));
 };
+
+
+
+
+//SUPERADMIN method
+export const retrieveOutstandingSalesSrv = async () => {
+  try {
+    // Fetch outstanding sales with status "PENDING" and include related invoices and sales info
+    const outstandingSales = await prisma.sales.findMany({
+      where: {
+        salesStatus: "OUTSTANDING"
+      },
+      include: {
+        salesInvoices: true,
+        salesInfos: true
+      }
+    });
+
+    // Format the response object to include relevant details
+    const formattedSales = outstandingSales.map(sale => ({
+      id: sale.id,
+      companyName: sale.companyName,
+      salesStatus: sale.salesStatus,
+      salesDate: sale.salesDate,
+      salesInvoices: sale.salesInvoices.map(invoice => ({
+        id: invoice.id,
+        image: invoice.image ? invoice.image.toString('base64') : null, // Convert image to base64 if needed
+        salesId: invoice.salesId
+      })),
+      salesInfos: sale.salesInfos.map(info => ({
+        id: info.id,
+        pricePerKg: info.pricePerKg,
+        kgSales: info.kgSales,
+        totalSalesValue: info.totalSalesValue,
+        durianVarietyId: info.durianVarietyId,
+        salesId: info.salesId
+      }))
+    }));
+
+    // Return the formatted response object
+    return {
+      success: true,
+      data: formattedSales,
+      message: 'Outstanding sales retrieved successfully'
+    };
+  } catch (error) {
+    console.error('Error in outstandingSalesSrv:', error.message);
+    return {
+      success: false,
+      message: 'Failed to retrieve outstanding sales'
+    };
+  }
+};
+
+
+export const changeSalesInfoInformation = async (salesInfo) => {
+  const { salesInfoId, pricePerKg, kgSales, totalSalesValue } = salesInfo;
+
+  // Construct the data object conditionally
+  const dataToUpdate = {};
+
+  // Only include the fields that are not null or empty
+  if (pricePerKg !== null && pricePerKg !== '') {
+    dataToUpdate.pricePerKg = pricePerKg;
+  }
+  if (kgSales !== null && kgSales !== '') {
+    dataToUpdate.kgSales = kgSales;
+  }
+  if (totalSalesValue !== null && totalSalesValue !== '') {
+    dataToUpdate.totalSalesValue = totalSalesValue;
+  }
+
+  // Proceed with the update only if there's data to update
+  if (Object.keys(dataToUpdate).length > 0) {
+    try {
+      await prisma.salesInfo.update({
+        where: {
+          id: salesInfoId,
+        },
+        data: dataToUpdate,
+      });
+      return {
+        success: true,
+        message: 'Sales information updated successfully',
+        updatedFields: dataToUpdate,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Failed to update sales information',
+        error: error.message,
+      };
+    }
+  } else {
+    return {
+      success: false,
+      message: 'No valid fields provided for update',
+    };
+  }
+};
+
+
+
+

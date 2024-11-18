@@ -13,8 +13,10 @@ model Admin {
   username  String?
   password  String?
   loginId   String?   @unique
+  salary    String?
   userType  UserType
   adminJwt  AdminJwt?
+  salaryAdvanced SalaryAdvanced[]
 
   @@map("admin")
 }
@@ -57,7 +59,7 @@ model PurchaseInfo {
   id                 String   @id @default(uuid())
   pricePerKg         String?
   kgPurchased        String?
-  totalPurchasePrice String?
+  totalPurchasePrice Float?
   durianVarietyId    String?
   purchaseId         String?
   purchase           Purchase? @relation(fields: [purchaseId], references: [id])
@@ -107,7 +109,7 @@ model SalesInfo {
   id              String   @id @default(uuid())
   pricePerKg      String?
   kgSales         String?
-  totalSalesValue String?
+  totalSalesValue Float?
   durianVarietyId String?
   salesId         String?
   sales           Sales?   @relation(fields: [salesId], references: [id])
@@ -123,20 +125,34 @@ model DurianVariety {
   
 }
 
+model SalaryAdvanced {
+  id              String   @id @default(uuid())
+  adminId         String
+  salaryAdvancedAmount String 
+  outstandingAmount String
+  requestDate  DateTime
+
+  admin                 Admin    @relation(fields: [adminId], references: [id])
+
+  @@map("salary_advanced")
+}
+
 // Define enums for user types and purchase/sales statuses
 enum UserType {
   ADMIN
-  MEMBER
+  SUPERADMIN
 }
 
 enum PurchaseStatus {
   PENDING
   COMPLETED
   CANCELLED
+  OUTSTANDING
 }
 
 enum SalesStatus {
   PENDING
   COMPLETED
-  RETURNED
+  CANCELLED
+  OUTSTANDING
 }
