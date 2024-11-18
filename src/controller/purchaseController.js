@@ -1,4 +1,4 @@
-import { createPurchaseOrder, createPurchaseInvoice, retrieveAllPurchases } from '../services/purchaseService.js';
+import { createPurchaseOrder, createPurchaseInvoice, retrieveAllPurchases, retrieveOutstandingPurchasesSrv, changePurchaseInfoInformationSrv } from '../services/purchaseService.js';
 
 // Create purchase order
 export const createPurchaseOrderController = async (req, res) => {
@@ -61,3 +61,30 @@ export const retrieveAllPurchasesController = async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to retrieve purchases' });
   }
 };
+
+
+
+//SUPERADMIN controller
+export const retrieveOutstandingPurchasesController = async (req, res) => {
+  try{
+    const outstandingPurchases = await retrieveOutstandingPurchasesSrv();
+    res.status(200).json({ success: true, data: outstandingPurchases });
+
+  }catch (error) {
+    console.error('Error retrieving purchases:', error);
+    res.status(500).json({ success: false, message: 'Failed to retrieve purchases' });
+  }
+}
+
+export const changePurchaseInfoInformationController = async (req, res) => {
+  try {
+    console.log("reading purchase info request.body...", req.body);
+    const { purchaseInfo } = req.body;
+    const result = await changePurchaseInfoInformationSrv(purchaseInfo);
+    res.status(201).json({ success: true, data: result });
+  } catch (error) {
+    console.error('Error creating purchase order:', error);
+    res.status(500).json({ success: false, message: 'Failed to create purchase order' });
+  }
+}
+

@@ -31,3 +31,31 @@ export const authenticateJWT = (req, res, next) => {
     console.log("1")
 
 };
+
+
+export const verifySuperAdminRole = (req, res, next) => {
+  try {
+    // Get the token from the request headers
+    const token = req.headers.authorization?.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({ message: 'Authorization token is required' });
+    }
+
+    // Verify the token
+    const decodedToken = jwt.verify(token, JWT_SECRET);
+
+    // Check if the user type is SUPERADMIN
+    if (decodedToken.role !== 'SUPERADMIN') {
+      return res.status(403).json({ message: 'Access denied. Superadmin role is required' });
+    }
+
+    // Attach the decoded token to the request
+    req.user = decodedToken;
+
+    // Proceed to the next middleware or route handler
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+}

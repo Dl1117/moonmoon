@@ -18,7 +18,6 @@ app.use((req, res, next) => {
   next();
 });
 
-//hllgmrke
 
 // Routes
 app.use('/admin', adminRoutes);
