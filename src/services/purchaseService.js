@@ -2,33 +2,50 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export const createPurchaseOrder = async (purchaseInfos) => {
+export const createPurchaseOrder = async (purchaseInfos, invoiceImages) => {
+  console.log("Reading purchase infos...", purchaseInfos);
 
-      console.log("reading purchase infos...", purchaseInfos);
-          return await prisma.$transaction(
-            purchaseInfos.map(({ supplierId, supplierLorryId, purchaseStatus, purchaseInfo }) => {
-              return prisma.purchase.create({
-                data: {
-                  supplierId,
-                  supplierLorryId,
-                  purchaseStatus,
-                  purchaseDate: new Date(),
-                  purchaseInfos: {
-                    create: purchaseInfo.map(({ durianVarietyId, pricePerKg, kgPurchased, totalPurchasePrice }) => ({
-                      durianVarietyId,
-                      pricePerKg,
-                      kgPurchased,
-                      totalPurchasePrice
-                    }))
-                  }
-                },
-                include: {
-                  purchaseInfos: true
-                }
-              });
-            })
-          );
-        };
+  // Extract purchase details from the single object
+  const { purchaseName, supplierId, supplierLorryId, purchaseStatus, purchaseInfo } = purchaseInfos;
+
+  // Handle multiple invoice images (if provided)
+  const invoiceImageData = invoiceImages?.map((image) => image?.buffer).filter(Boolean); // Ensure only valid image buffers are processed
+
+
+  return await prisma.$transaction([
+    prisma.purchase.create({
+      data: {
+        purchaseName,
+        supplierId,
+        supplierLorryId,
+        purchaseStatus,
+        purchaseDate: new Date(),
+        // Create purchase info records
+        purchaseInfos: {
+          create: purchaseInfo.map(({ durianVarietyId, pricePerKg, kgPurchased, totalPurchasePrice }) => ({
+            durianVarietyId,
+            pricePerKg,
+            kgPurchased,
+            totalPurchasePrice: parseFloat(totalPurchasePrice), // Convert string to float
+          })),
+        },
+         // Conditionally create purchase invoices if multiple images are provided
+         ...(invoiceImageData.length > 0 && {
+          purchaseInvoices: {
+            create: invoiceImageData.map((imageBuffer) => ({
+              image: imageBuffer,
+            })),
+          },
+        }),
+      },
+      include: {
+        purchaseInfos: true,
+        purchaseInvoices: true, // Include invoices in the result
+      },
+    }),
+  ]);
+};
+
 
 
 export const createPurchaseInvoice = async (purchaseOrderIdInvoices) => {
@@ -65,12 +82,19 @@ export const retrieveAllPurchases = async () => {
   const purchases = await prisma.purchase.findMany({
     include: {
       purchaseInvoices: true,
+      supplier: true,
+      supplierLorry: true
     },
   });
 
   // Convert each image buffer to Base64 for each invoice in each purchase
-  return purchases.map(purchase => ({
+  return purchases.map(({ supplier, supplierLorry, ...purchase }) => ({
     ...purchase,
+    supplierInfo: {
+      supplierName: supplier.companyName,
+      contact: supplier.contact,
+      lorryPlateNumber: supplierLorry.lorryPlateNumber,
+    },
     purchaseInvoices: purchase.purchaseInvoices.map(invoice => ({
       ...invoice,
       image: invoice.image.toString('base64'), // Convert bytes to Base64 string

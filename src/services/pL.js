@@ -101,8 +101,16 @@ export const calculateDailyProfitLossSrv = async () => {
     console.error('Error calculating daily profit/loss:', error.message);
     return {
       success: false,
-      message: 'Failed to calculate daily and monthly profit/loss',
+      message: 'Failed to calculate daily and monthly profit/lNoss',
       error: error.message,
     };
   }
 };
+
+
+
+//calculate gross profit/loss need to deduct the expenses
+//and also need to deduct the outstanding payment
+export const calculateGrossProfitLosss = async () => {
+
+}

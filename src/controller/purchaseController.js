@@ -3,13 +3,26 @@ import { createPurchaseOrder, createPurchaseInvoice, retrieveAllPurchases, retri
 // Create purchase order
 export const createPurchaseOrderController = async (req, res) => {
   try {
-    console.log("reading purchase info request.body...", req.body);
-    const { purchaseInfos } = req.body;
-    const result = await createPurchaseOrder(purchaseInfos);
+    console.log("reading purchase info request.body...", JSON.parse(req.body.purchaseInfos));
+    const invoiceImages = req.files;
+    
+    const  purchaseInfos  = JSON.parse(req.body.purchaseInfos);
+    const result = await createPurchaseOrder(purchaseInfos, invoiceImages || []);
     res.status(201).json({ success: true, data: result });
   } catch (error) {
-    console.error('Error creating purchase order:', error);
-    res.status(500).json({ success: false, message: 'Failed to create purchase order' });
+    console.error('Error creating purchase order:', error);  // Log full error for debugging
+    
+    // Check if the error is a validation error (e.g., missing required fields, type mismatch)
+    if (error instanceof SyntaxError) {
+      // Handle specific case for invalid JSON
+      res.status(400).json({ success: false, message: 'Invalid JSON format for purchaseInfos' });
+    } else if (error.message.includes('Invalid value provided')) {
+      // Handle specific Prisma validation errors
+      res.status(400).json({ success: false, message: 'Invalid data provided. Please check your input fields.' });
+    } else {
+      // Generic error handling
+      res.status(500).json({ success: false, message: 'Failed to create purchase order. Please try again later.' });
+    }
   }
 };
 

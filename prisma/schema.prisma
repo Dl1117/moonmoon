@@ -36,12 +36,15 @@ model AdminJwt {
 
 model Purchase {
   id               String         @id @default(uuid())
+  purchaseName     String?
   supplierId       String?
   supplierLorryId  String?
   purchaseStatus   PurchaseStatus
   purchaseDate     DateTime?
   purchaseInvoices PurchaseInvoice[]
   purchaseInfos    PurchaseInfo[]
+  supplier         Supplier? @relation(fields: [supplierId], references: [id])
+  supplierLorry    SupplierLorry? @relation(fields: [supplierLorryId], references: [id])
 
   @@map("purchase")
 }
@@ -72,7 +75,7 @@ model Supplier {
   companyName  String
   contact      String
   supplierLorries SupplierLorry[]
-
+  purchase     Purchase[]
   @@map("supplier")
 }
 
@@ -81,6 +84,8 @@ model SupplierLorry {
   lorryPlateNumber String
   supplierId       String
   supplier         Supplier? @relation(fields: [supplierId], references: [id])
+  purchase     Purchase[]
+
 
   @@map("supplier_lorry")
 }
