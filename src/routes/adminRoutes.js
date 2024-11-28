@@ -30,7 +30,7 @@ adminRoutes.post('/upload-purchase-invoice', upload.array('invoiceImages'), crea
 adminRoutes.get('/get-all-purchases', retrieveAllPurchasesController);
 
 // Route for handling sales
-adminRoutes.post('/create-sales-order', createSalesOrderController);
+adminRoutes.post('/create-sales-order', upload.array('invoiceImages'), createSalesOrderController);
 adminRoutes.post('/upload-sales-invoice',upload.array("invoiceImages"), createSalesInvoiceController);
 adminRoutes.get('/get-all-sales', retrieveAllSalesController);
 

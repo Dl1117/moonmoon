@@ -3,10 +3,15 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // Create sales order with sales info
-export const createSalesOrder = async (salesInfos) => {
-  return await prisma.$transaction(
-    salesInfos.map(({ companyName, salesStatus, salesInfo }) => {
-      return prisma.sales.create({
+export const createSalesOrder = async (salesInfos, invoiceImages) => {
+
+  const {companyName, salesStatus, salesInfo} = salesInfos;
+
+  // Handle multiple invoice images (if provided)
+  const invoiceImageData = invoiceImages?.map((image) => image?.buffer).filter(Boolean); // Ensure only valid image buffers are processed
+
+  return await prisma.$transaction([
+    prisma.sales.create({
         data: {
           companyName,
           salesStatus,
@@ -16,17 +21,26 @@ export const createSalesOrder = async (salesInfos) => {
               durianVarietyId,
               pricePerKg,
               kgSales,
-              totalSalesValue
+              totalSalesValue: parseFloat(totalSalesValue)
             }))
-          }
+          },
+          // Conditionally create purchase invoices if multiple images are provided
+        ...(invoiceImageData.length > 0 && {
+          salesInvoices: {
+            create: invoiceImageData.map((imageBuffer) => ({
+              image: imageBuffer,
+            })),
+          },
+        }),
         },
         include: {
-          salesInfos: true
+          salesInfos: true,
+          salesInvoices: true
         }
-      });
-    })
+      })
+    ]
   );
-};
+}; 
 
 // Create sales invoice
 export const createSalesInvoice = async (salesOrderIdInvoices) => {
