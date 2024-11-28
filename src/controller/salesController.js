@@ -9,7 +9,12 @@ import {
         // Controller to create sales order
         export const createSalesOrderController = async (req, res) => {
           try {
-            const result = await createSalesOrder(req.body.salesInfos);
+
+            const invoiceImages = req.files;
+
+            const salesInfos = JSON.parse(req.body.salesInfos);
+
+            const result = await createSalesOrder(salesInfos, invoiceImages || []);
             res.status(201).json({ success: true, data: result });
           } catch (error) {
             console.error('Error creating sales order:', error);

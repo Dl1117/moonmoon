@@ -36,7 +36,7 @@ model AdminJwt {
 
 model Purchase {
   id               String         @id @default(uuid())
-  purchaseName     String?
+  purchaseName     String
   supplierId       String?
   supplierLorryId  String?
   purchaseStatus   PurchaseStatus
