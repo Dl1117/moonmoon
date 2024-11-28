@@ -25,7 +25,7 @@ adminRoutes.get('/get-all-suppliers', getAllSuppliers);
 adminRoutes.get('/supplier/:id', getSupplierById);
 
 // Route for handling purchases
-adminRoutes.post('/create-purchase-order', createPurchaseOrderController);
+adminRoutes.post('/create-purchase-order', upload.array('invoiceImages'),createPurchaseOrderController);
 adminRoutes.post('/upload-purchase-invoice', upload.array('invoiceImages'), createPurchaseInvoiceController);
 adminRoutes.get('/get-all-purchases', retrieveAllPurchasesController);
 
