@@ -118,7 +118,7 @@ model SalesInfo {
   durianVarietyId String?
   salesId         String?
   sales           Sales?   @relation(fields: [salesId], references: [id])
-
+  durianVariety   DurianVariety? @relation(fields: [durianVarietyId], references: [id])
 
   @@map("sales_info")
 }
@@ -127,14 +127,14 @@ model DurianVariety {
   id              String   @id @default(uuid())
   durianCode      String   @unique
   stockQuantity   Int
-  
+  salesInfo       SalesInfo[]
 }
 
 model SalaryAdvanced {
   id              String   @id @default(uuid())
   adminId         String
-  salaryAdvancedAmount String 
-  outstandingAmount String
+  salaryAdvancedAmount Float
+  outstandingAmount Float
   requestDate  DateTime
 
   admin                 Admin    @relation(fields: [adminId], references: [id])

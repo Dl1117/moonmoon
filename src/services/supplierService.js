@@ -1,5 +1,5 @@
 // services/supplierService.js
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -11,9 +11,10 @@ export const createSuppliersWithLorries = async (suppliers) => {
         companyName,
         contact,
         supplierLorries: {
-          create: lorries?.map(lorry => ({
-            lorryPlateNumber: lorry.lorryPlateNumber
-          })) || [],
+          create:
+            lorries?.map((lorry) => ({
+              lorryPlateNumber: lorry.lorryPlateNumber,
+            })) || [],
         },
       },
       include: {
@@ -21,27 +22,48 @@ export const createSuppliersWithLorries = async (suppliers) => {
       },
     })
   );
-  
+
   return await Promise.all(supplierCreations);
 };
 
-
 // 2. Retrieve Supplier(s) with Lorry/Lorries
-export const getSuppliersWithLorries = async () => {
-  return await prisma.supplier.findMany({
+export const getSuppliersWithLorries = async (page, size) => {
+  const pagination = {};
+
+  if (page !== null && size !== null) {
+    const offset = page * size;
+    pagination.skip = offset;
+    pagination.take = size;
+  }
+  const suppliers = await prisma.supplier.findMany({
+    ...pagination,
     include: {
-      supplierLorries: true
-    }
+      supplierLorries: true,
+    },
   });
+
+  const totalRecords =
+    page && size ? await prisma.supplier.count() : suppliers.length;
+  const totalPages = page && size ? Math.ceil(totalRecords / size) : 1;
+
+  return {
+    supplier: suppliers,
+    pagination: {
+      totalRecords,
+      page: page !== null ? page : null,
+      size: size || null,
+      totalPages: totalPages || null,
+    },
+  };
 };
 
 export const getSupplierWithLorriesById = async (supplierId) => {
   return await prisma.supplier.findUnique({
     where: {
-      id: supplierId
+      id: supplierId,
     },
     include: {
-      supplierLorries: true
-    }
+      supplierLorries: true,
+    },
   });
 };
