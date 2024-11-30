@@ -5,6 +5,12 @@ import { createSuppliersWithLorries, getSuppliersWithLorries, getSupplierWithLor
 export const createSupplier = async (req, res) => {
   try {
     const supplierData = req.body.suppliers;
+    if (!supplierData || !Array.isArray(supplierData) || supplierData.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid supplier data. Please provide an array of suppliers.",
+      });
+    }
     const newSupplier = await createSuppliersWithLorries(supplierData);
     res.status(201).json({ success: true, data: newSupplier });
   } catch (error) {
@@ -16,7 +22,13 @@ export const createSupplier = async (req, res) => {
 // Get all Suppliers with Lorry/Lorries
 export const getAllSuppliers = async (req, res) => {
   try {
-    const suppliers = await getSuppliersWithLorries();
+    const { page, size } = req.query;
+
+    // Convert `page` and `size` to numbers and provide default values if not supplied
+    const pageNumber = page ? parseInt(page, 10) : null;
+    const pageSize = size ? parseInt(size, 10) : null;
+
+    const suppliers = await getSuppliersWithLorries(pageNumber, pageSize);
     res.status(200).json({ success: true, data: suppliers });
   } catch (error) {
     console.error('Error retrieving suppliers:', error);

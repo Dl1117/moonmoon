@@ -3,7 +3,7 @@ import { adminLogin, createAdminAccount, requestAdvancedSalaryCtr, superAdminCan
 import { fetchDurianVarieties, handleCreateOrUpdateDurianVariety } from '../controller/durianController.js';
 import { createSupplier, getAllSuppliers, getSupplierById } from '../controller/supplierController.js';
 import { changePurchaseInfoInformationController, createPurchaseInvoiceController, createPurchaseOrderController, retrieveAllPurchasesController, retrieveOutstandingPurchasesController } from '../controller/purchaseController.js';
-import { changeSalesInfoInformationController, createSalesInvoiceController, createSalesOrderController, retrieveAllSalesController } from '../controller/salesController.js';
+import { changeSalesInfoInformationController, createSalesInvoiceController, createSalesOrderController, retrieveAllSalesController, retrieveOutstandingSalesController } from '../controller/salesController.js';
 import { authenticateJWT, verifySuperAdminRole } from '../middleware/authMiddleware.js';
 import { upload } from '../middleware/mutlerConfig.js';
 import { calculateDailyProfitLossController } from '../controller/pLController.js';
@@ -44,7 +44,7 @@ adminRoutes.post('/request-advanced-salary', requestAdvancedSalaryCtr);
 adminRoutes.get('/get-all-outstanding-purchases', retrieveOutstandingPurchasesController);
 adminRoutes.post('/update-purchase-info', changePurchaseInfoInformationController);
 adminRoutes.get('/profit-loss', calculateDailyProfitLossController);
-adminRoutes.get('/get-all-outstanding-sales', retrieveAllSalesController);
+adminRoutes.get('/get-all-outstanding-sales', retrieveOutstandingSalesController);
 adminRoutes.post('/update-sales-info', changeSalesInfoInformationController);
 
 
