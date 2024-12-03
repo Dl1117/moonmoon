@@ -117,9 +117,8 @@ export const retrieveAllPurchases = async (page, size) => {
     },
   });
 
-  const totalRecords =
-    page && size ? await prisma.purchase.count() : purchases.length;
-  const totalPages = page && size ? Math.ceil(totalRecords / size) : 1;
+  const totalRecords = await prisma.purchase.count();
+  const totalPages = size ? Math.ceil(totalRecords / size) : 1;
 
   // Convert each image buffer to Base64 for each invoice in each purchase
   const formattedPurchases = purchases.map(
@@ -169,11 +168,12 @@ export const retrieveOutstandingPurchasesSrv = async () => {
         purchaseInvoices: true,
       },
     });
-    const totalRecords =
-      page && size
-        ? await prisma.purchase.count()
-        : outStandingPurchases.length;
-    const totalPages = page && size ? Math.ceil(totalRecords / size) : 1;
+    const totalRecords = await prisma.purchase.count({
+      where: {
+        purchaseStatus: "OUTSTANDING",
+      },
+    });
+    const totalPages = size ? Math.ceil(totalRecords / size) : 1;
 
     // Format the response object to include relevant details
     const formattedPurchases = outStandingPurchases.map((purchase) => ({

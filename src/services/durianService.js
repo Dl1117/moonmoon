@@ -56,9 +56,8 @@ export const getDurianVariety = async (page, size) => {
   }
 
   const durianVariety = await prisma.durianVariety.findMany({ ...pagination });
-  const totalRecords =
-    page && size ? await prisma.durianVariety.count() : durianVariety.length;
-  const totalPages = page && size ? Math.ceil(totalRecords / size) : 1;
+  const totalRecords = await prisma.durianVariety.count();
+  const totalPages = size ? Math.ceil(totalRecords / size) : 1;
 
   console.log("durian variety", durianVariety);
   return {
