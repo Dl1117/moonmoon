@@ -42,9 +42,8 @@ export const getSuppliersWithLorries = async (page, size) => {
     },
   });
 
-  const totalRecords =
-    page && size ? await prisma.supplier.count() : suppliers.length;
-  const totalPages = page && size ? Math.ceil(totalRecords / size) : 1;
+  const totalRecords = await prisma.supplier.count();
+  const totalPages = size ? Math.ceil(totalRecords / size) : 1;
 
   return {
     supplier: suppliers,

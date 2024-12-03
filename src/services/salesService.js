@@ -63,8 +63,13 @@ export const createSalesOrder = async (salesInfos, invoiceImages) => {
 export const createSalesInvoice = async (salesOrderIdInvoices) => {
   try {
     console.log("reading purchaseOrderIdInvoices...", salesOrderIdInvoices);
-    if (!Array.isArray(salesOrderIdInvoices) || salesOrderIdInvoices.length === 0) {
-      throw new Error("Invalid invoice data. Ensure at least one invoice is provided.");
+    if (
+      !Array.isArray(salesOrderIdInvoices) ||
+      salesOrderIdInvoices.length === 0
+    ) {
+      throw new Error(
+        "Invalid invoice data. Ensure at least one invoice is provided."
+      );
     }
     const results = await Promise.all(
       salesOrderIdInvoices.map((image) =>
@@ -105,9 +110,10 @@ export const retrieveAllSales = async (page, size) => {
     },
   });
 
-  const totalRecords = page && size ? await prisma.sales.count() : sales.length;
-  const totalPages = page && size ? Math.ceil(totalRecords / size) : 1;
-
+  const totalRecords = await prisma.sales.count();
+  const totalPages = size ? Math.ceil(totalRecords / size) : 1;
+  console.log("Total records count query executed by Prisma");
+  console.log(totalRecords);
   const formattedSales = sales.map((sale) => ({
     ...sale,
     salesInfos: sale.salesInfos.map((info) => ({
@@ -155,9 +161,12 @@ export const retrieveOutstandingSalesSrv = async (page, size) => {
       },
     });
 
-    const totalRecords =
-      page && size ? await prisma.sales.count() : outstandingSales.length;
-    const totalPages = page && size ? Math.ceil(totalRecords / size) : 1;
+    const totalRecords = await prisma.sales.count({
+      where: {
+        salesStatus: "OUTSTANDING",
+      },
+    });
+    const totalPages = size ? Math.ceil(totalRecords / size) : 1;
 
     // Format the response object to include relevant details
     const formattedSales = outstandingSales.map((sale) => ({
