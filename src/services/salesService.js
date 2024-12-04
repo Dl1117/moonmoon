@@ -30,14 +30,27 @@ export const createSalesOrder = async (salesInfos, invoiceImages) => {
           salesDate: new Date(),
           salesInfos: {
             create: salesInfo.map(
-              ({ durianVarietyId, pricePerKg, kgSales, totalSalesValue }) => ({
+              ({
+                durianVarietyId,
+                pricePerKg,
+                kgSales,
+                totalSalesValue,
+                basket,
+              }) => ({
                 durianVarietyId,
                 pricePerKg,
                 kgSales,
                 totalSalesValue: parseFloat(totalSalesValue),
+                bucket: {
+                  create: basket.map(({ kg, salesValue }) => ({
+                    kg,
+                    kgSales: salesValue / parseFloat(pricePerKg), // Calculate sales kg for each bucket
+                  })),
+                },
               })
             ),
           },
+
           // Conditionally create purchase invoices if multiple images are provided
           ...(invoiceImageData.length > 0 && {
             salesInvoices: {
@@ -48,7 +61,11 @@ export const createSalesOrder = async (salesInfos, invoiceImages) => {
           }),
         },
         include: {
-          salesInfos: true,
+          salesInfos: {
+            include: {
+              bucket: true,
+            },
+          },
           salesInvoices: true,
         },
       }),
@@ -105,6 +122,7 @@ export const retrieveAllSales = async (page, size) => {
       salesInfos: {
         include: {
           durianVariety: true,
+          bucket: true,
         },
       },
     },
@@ -157,7 +175,9 @@ export const retrieveOutstandingSalesSrv = async (page, size) => {
       },
       include: {
         salesInvoices: true,
-        salesInfos: true,
+        salesInfos: {
+          bucket: true,
+        },
       },
     });
 

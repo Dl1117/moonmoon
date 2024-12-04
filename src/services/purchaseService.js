@@ -36,11 +36,18 @@ export const createPurchaseOrder = async (purchaseInfos, invoiceImages) => {
                 pricePerKg,
                 kgPurchased,
                 totalPurchasePrice,
+                basket,
               }) => ({
                 durianVarietyId,
                 pricePerKg,
                 kgPurchased,
                 totalPurchasePrice: parseFloat(totalPurchasePrice), // Convert string to float
+                bucket: {
+                  create: basket.map(({ kg, salesValue }) => ({
+                    kg,
+                    kgSales: salesValue / parseFloat(pricePerKg), // Calculate sales kg for each bucket
+                  })),
+                },
               })
             ),
           },
@@ -54,7 +61,11 @@ export const createPurchaseOrder = async (purchaseInfos, invoiceImages) => {
           }),
         },
         include: {
-          purchaseInfos: true,
+          purchaseInfos: {
+            include: {
+              bucket: true,
+            },
+          },
           purchaseInvoices: true, // Include invoices in the result
         },
       }),
@@ -111,6 +122,11 @@ export const retrieveAllPurchases = async (page, size) => {
   const purchases = await prisma.purchase.findMany({
     ...pagination,
     include: {
+      purchaseInfos: {
+        include: {
+          bucket: true,
+        },
+      },
       purchaseInvoices: true,
       supplier: true,
       supplierLorry: true,
@@ -164,7 +180,11 @@ export const retrieveOutstandingPurchasesSrv = async () => {
         purchaseStatus: "OUTSTANDING",
       },
       include: {
-        purchaseInfos: true,
+        purchaseInfos: {
+          include: {
+            bucket: true,
+          },
+        },
         purchaseInvoices: true,
       },
     });

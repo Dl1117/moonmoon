@@ -9,33 +9,32 @@ datasource db {
 }
 
 model Admin {
-  id        String    @id @default(uuid())
-  username  String?
-  password  String?
-  loginId   String?   @unique
-  salary    String?
-  userType  UserType
-  adminJwt  AdminJwt?
+  id             String           @id @default(uuid())
+  username       String?
+  password       String?
+  loginId        String?          @unique
+  salary         String?
+  userType       UserType
+  adminJwt       AdminJwt?
   salaryAdvanced SalaryAdvanced[]
 
   @@map("admin")
 }
 
 model AdminJwt {
-  id                    String   @id @default(uuid())
-  adminId               String   @unique
-  accessToken           String? @db.VarChar(255)
-  refreshToken          String? @db.VarChar(255)
-  accessTokenExpiryDate DateTime?
+  id                     String    @id @default(uuid())
+  adminId                String    @unique
+  accessToken            String?   @db.VarChar(255)
+  refreshToken           String?   @db.VarChar(255)
+  accessTokenExpiryDate  DateTime?
   refreshTokenExpiryDate DateTime?
-  admin                 Admin    @relation(fields: [adminId], references: [id])
+  admin                  Admin     @relation(fields: [adminId], references: [id])
 
   @@map("admin_jwt")
 }
 
-
 model Purchase {
-  id               String         @id @default(uuid())
+  id               String            @id @default(uuid())
   purchaseName     String
   supplierId       String?
   supplierLorryId  String?
@@ -43,14 +42,14 @@ model Purchase {
   purchaseDate     DateTime?
   purchaseInvoices PurchaseInvoice[]
   purchaseInfos    PurchaseInfo[]
-  supplier         Supplier? @relation(fields: [supplierId], references: [id])
-  supplierLorry    SupplierLorry? @relation(fields: [supplierLorryId], references: [id])
+  supplier         Supplier?         @relation(fields: [supplierId], references: [id])
+  supplierLorry    SupplierLorry?    @relation(fields: [supplierLorryId], references: [id])
 
   @@map("purchase")
 }
 
 model PurchaseInvoice {
-  id         String   @id @default(uuid())
+  id         String    @id @default(uuid())
   image      Bytes?
   purchaseId String?
   purchase   Purchase? @relation(fields: [purchaseId], references: [id])
@@ -59,87 +58,99 @@ model PurchaseInvoice {
 }
 
 model PurchaseInfo {
-  id                 String   @id @default(uuid())
+  id                 String    @id @default(uuid())
   pricePerKg         String?
   kgPurchased        String?
   totalPurchasePrice Float?
   durianVarietyId    String?
   purchaseId         String?
   purchase           Purchase? @relation(fields: [purchaseId], references: [id])
+  bucket             Bucket[]
 
   @@map("purchase_info")
 }
 
 model Supplier {
-  id           String          @id @default(uuid())
-  companyName  String
-  contact      String
+  id              String          @id @default(uuid())
+  companyName     String
+  contact         String
   supplierLorries SupplierLorry[]
-  purchase     Purchase[]
+  purchase        Purchase[]
+
   @@map("supplier")
 }
 
 model SupplierLorry {
-  id               String   @id @default(uuid())
+  id               String     @id @default(uuid())
   lorryPlateNumber String
   supplierId       String
-  supplier         Supplier? @relation(fields: [supplierId], references: [id])
-  purchase     Purchase[]
-
+  supplier         Supplier?  @relation(fields: [supplierId], references: [id])
+  purchase         Purchase[]
 
   @@map("supplier_lorry")
 }
 
 model Sales {
-  id           String         @id @default(uuid())
-  companyName  String?
-  salesStatus  SalesStatus
-  salesDate    DateTime?
+  id            String         @id @default(uuid())
+  companyName   String?
+  salesStatus   SalesStatus
+  salesDate     DateTime?
   salesInvoices SalesInvoice[]
-  salesInfos   SalesInfo[]
+  salesInfos    SalesInfo[]
 
   @@map("sales")
 }
 
 model SalesInvoice {
-  id         String   @id @default(uuid())
-  image      Bytes?
+  id      String  @id @default(uuid())
+  image   Bytes?
   salesId String?
-  sales      Sales?   @relation(fields: [salesId], references: [id])
+  sales   Sales?  @relation(fields: [salesId], references: [id])
 
   @@map("sales_invoice")
 }
 
 model SalesInfo {
-  id              String   @id @default(uuid())
+  id              String         @id @default(uuid())
   pricePerKg      String?
   kgSales         String?
   totalSalesValue Float?
   durianVarietyId String?
   salesId         String?
-  sales           Sales?   @relation(fields: [salesId], references: [id])
+  sales           Sales?         @relation(fields: [salesId], references: [id])
   durianVariety   DurianVariety? @relation(fields: [durianVarietyId], references: [id])
+  bucket          Bucket[]
 
   @@map("sales_info")
 }
 
 model DurianVariety {
-  id              String   @id @default(uuid())
-  durianCode      String   @unique
-  stockQuantity   Int
-  salesInfo       SalesInfo[]
+  id            String      @id @default(uuid())
+  durianCode    String      @unique
+  stockQuantity Int
+  salesInfo     SalesInfo[]
 }
 
 model SalaryAdvanced {
-  id              String   @id @default(uuid())
-  adminId         String
+  id                   String   @id @default(uuid())
+  adminId              String
   salaryAdvancedAmount Float
-  outstandingAmount Float
-  requestDate  DateTime
+  outstandingAmount    Float
+  requestDate          DateTime
 
-  admin                 Admin    @relation(fields: [adminId], references: [id])
+  admin Admin @relation(fields: [adminId], references: [id])
 
   @@map("salary_advanced")
+}
+
+model Bucket {
+  id             String        @id @default(uuid())
+  kg             Float
+  kgSales        Float
+  salesInfoId    String?
+  purchaseInfoId String?
+  salesInfo      SalesInfo?    @relation(fields: [salesInfoId], references: [id])
+  purchaseInfo   PurchaseInfo? @relation(fields: [purchaseInfoId], references: [id])
 }
 
 // Define enums for user types and purchase/sales statuses
