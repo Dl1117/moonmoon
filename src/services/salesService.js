@@ -225,6 +225,8 @@ export const retrieveOutstandingSalesSrv = async (page, size) => {
       })),
     }));
 
+    //kg sales
+
     // Return the formatted response object
     return {
       success: true,
