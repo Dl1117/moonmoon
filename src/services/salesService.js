@@ -220,10 +220,12 @@ export const retrieveOutstandingSalesSrv = async (page, size) => {
         bucket: info.bucket.map((bucket) => ({
           id: bucket.id,
           kg: bucket.kg,
-          salesValue: bucket.salesValue,
+          salesValue: bucket.kgSales,
         })),
       })),
     }));
+
+    //kg sales
 
     // Return the formatted response object
     return {
