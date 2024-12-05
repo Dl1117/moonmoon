@@ -15,7 +15,8 @@ export const createSalesOrderController = async (req, res) => {
     if (!salesInfos || !salesInfos.companyName || !salesInfos.salesInfo) {
       return res.status(400).json({
         success: false,
-        message: "Invalid sales order data. Ensure all required fields are provided.",
+        message:
+          "Invalid sales order data. Ensure all required fields are provided.",
       });
     }
     const result = await createSalesOrder(salesInfos, invoiceImages || []);
@@ -91,21 +92,30 @@ export const retrieveOutstandingSalesController = async (req, res) => {
     const pageNumber = page ? parseInt(page, 10) : null;
     const pageSize = size ? parseInt(size, 10) : null;
 
-    const outstandingSales = await retrieveOutstandingSalesSrv(pageNumber, pageSize);
-    res.status(200).json({ success: true, data: outstandingSales });
+    const outstandingSales = await retrieveOutstandingSalesSrv(
+      pageNumber,
+      pageSize
+    );
+    res.status(200).json(outstandingSales);
   } catch (error) {
-    console.error("Error retrieving purchases:", error);
+    console.error(
+      "Error in retrieveOutstandingSalesController:",
+      error.message
+    );
     res
       .status(500)
-      .json({ success: false, message: "Failed to retrieve purchases" });
+      .json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
   }
 };
 
 export const changeSalesInfoInformationController = async (req, res) => {
   try {
     console.log("reading purchase info request.body...", req.body);
-     // Validate incoming request body structure
-     if (!req.body || !req.body.salesId) {
+    // Validate incoming request body structure
+    if (!req.body || !req.body.salesId) {
       return res.status(400).json({
         success: false,
         message: "Sales ID is required to update sales information",
@@ -121,13 +131,13 @@ export const changeSalesInfoInformationController = async (req, res) => {
         errors: result.results,
       });
     }
-     // If everything went fine, send the success response
-     res.status(200).json({ success: true, data: result });
+    // If everything went fine, send the success response
+    res.status(200).json({ success: true, data: result });
   } catch (error) {
     // Handle specific errors based on the error message or type
     console.error("Error occurred while processing request:", error);
 
-    if (error.message.includes('salesId')) {
+    if (error.message.includes("salesId")) {
       return res.status(400).json({
         success: false,
         message: "Invalid Sales ID provided",
@@ -137,7 +147,8 @@ export const changeSalesInfoInformationController = async (req, res) => {
     // General fallback error handler
     res.status(500).json({
       success: false,
-      message: "An unexpected error occurred while processing your request. Please try again later.",
+      message:
+        "An unexpected error occurred while processing your request. Please try again later.",
     });
   }
 };

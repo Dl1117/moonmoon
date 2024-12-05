@@ -112,59 +112,71 @@ export const createPurchaseInvoice = async (purchaseOrderIdInvoices) => {
 //           );
 // }
 export const retrieveAllPurchases = async (page, size) => {
-  const pagination = {};
+  try {
+    const pagination = {};
 
-  if (page !== null && size !== null) {
-    const offset = page * size;
-    pagination.skip = offset;
-    pagination.take = size;
-  }
-  const purchases = await prisma.purchase.findMany({
-    ...pagination,
-    include: {
-      purchaseInfos: {
-        include: {
-          bucket: true,
+    if (page !== null && size !== null) {
+      const offset = page * size;
+      pagination.skip = offset;
+      pagination.take = size;
+    }
+    const purchases = await prisma.purchase.findMany({
+      ...pagination,
+      include: {
+        purchaseInfos: {
+          include: {
+            bucket: true,
+          },
+        },
+        purchaseInvoices: true,
+        supplier: true,
+        supplierLorry: true,
+      },
+    });
+
+    const totalRecords = await prisma.purchase.count();
+    const totalPages = size ? Math.ceil(totalRecords / size) : 1;
+
+    // Convert each image buffer to Base64 for each invoice in each purchase
+    const formattedPurchases = purchases.map(
+      ({ supplier, supplierLorry, ...purchase }) => ({
+        ...purchase,
+        supplierInfo: {
+          supplierName: supplier.companyName,
+          contact: supplier.contact,
+          lorryPlateNumber: supplierLorry.lorryPlateNumber,
+        },
+        purchaseInvoices: purchase.purchaseInvoices.map((invoice) => ({
+          ...invoice,
+          image: invoice.image.toString("base64"), // Convert bytes to Base64 string
+        })),
+      })
+    );
+
+    return {
+      success: true,
+      data: {
+        purchase: formattedPurchases,
+        pagination: {
+          totalRecords,
+          page: page !== null ? page : null,
+          size: size || null,
+          totalPages: totalPages || null,
         },
       },
-      purchaseInvoices: true,
-      supplier: true,
-      supplierLorry: true,
-    },
-  });
-
-  const totalRecords = await prisma.purchase.count();
-  const totalPages = size ? Math.ceil(totalRecords / size) : 1;
-
-  // Convert each image buffer to Base64 for each invoice in each purchase
-  const formattedPurchases = purchases.map(
-    ({ supplier, supplierLorry, ...purchase }) => ({
-      ...purchase,
-      supplierInfo: {
-        supplierName: supplier.companyName,
-        contact: supplier.contact,
-        lorryPlateNumber: supplierLorry.lorryPlateNumber,
-      },
-      purchaseInvoices: purchase.purchaseInvoices.map((invoice) => ({
-        ...invoice,
-        image: invoice.image.toString("base64"), // Convert bytes to Base64 string
-      })),
-    })
-  );
-
-  return {
-    purchase: formattedPurchases,
-    pagination: {
-      totalRecords,
-      page: page !== null ? page : null,
-      size: size || null,
-      totalPages: totalPages || null,
-    },
-  };
+    };
+  } catch (error) {
+    console.error("Error in retrieveAllPurchases:", error);
+    return {
+      success: false,
+      message: "An error occurred while retrieving purchases",
+      errorDetails: error.message,
+    };
+  }
 };
 
 //SUPERADMIN method
-export const retrieveOutstandingPurchasesSrv = async () => {
+export const retrieveOutstandingPurchasesSrv = async (page, size) => {
   try {
     const pagination = {};
 
@@ -213,26 +225,33 @@ export const retrieveOutstandingPurchasesSrv = async () => {
         totalPurchasePrice: info.totalPurchasePrice,
         durianVarietyId: info.durianVarietyId,
         purchaeId: info.purchaseId,
+        bucket: info.bucket.map((bucket) => ({
+          id: bucket.id,
+          kg: bucket.kg,
+          kgSales: bucket.kgSales,
+        })),
       })),
     }));
 
     // Return the formatted response object
     return {
       success: true,
-      outStandingPurchase: formattedPurchases,
-      pagination: {
-        totalRecords,
-        page: page !== null ? page : null,
-        size: size || null,
-        totalPages: totalPages || null,
+      data: {
+        outStandingPurchase: formattedPurchases,
+        pagination: {
+          totalRecords,
+          page: page !== null ? page : null,
+          size: size || null,
+          totalPages: totalPages || null,
+        },
       },
-      message: "Outstanding purchases retrieved successfully",
     };
   } catch (error) {
-    console.error("Error in outstandingSalesSrv:", error.message);
+    console.error("Error in retrieveOutstandingPurchasesSrv:", error);
     return {
       success: false,
-      message: "Failed to retrieve outstanding purchases",
+      message: "An error occurred while retrieving outstanding purchases",
+      errorDetails: error.message,
     };
   }
 };

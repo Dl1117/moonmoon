@@ -27,28 +27,22 @@ export const createPurchaseOrderController = async (req, res) => {
     // Check if the error is a validation error (e.g., missing required fields, type mismatch)
     if (error instanceof SyntaxError) {
       // Handle specific case for invalid JSON
-      res
-        .status(400)
-        .json({
-          success: false,
-          message: "Invalid JSON format for purchaseInfos",
-        });
+      res.status(400).json({
+        success: false,
+        message: "Invalid JSON format for purchaseInfos",
+      });
     } else if (error.message.includes("Invalid value provided")) {
       // Handle specific Prisma validation errors
-      res
-        .status(400)
-        .json({
-          success: false,
-          message: "Invalid data provided. Please check your input fields.",
-        });
+      res.status(400).json({
+        success: false,
+        message: "Invalid data provided. Please check your input fields.",
+      });
     } else {
       // Generic error handling
-      res
-        .status(500)
-        .json({
-          success: false,
-          message: "Failed to create purchase order. Please try again later.",
-        });
+      res.status(500).json({
+        success: false,
+        message: "Failed to create purchase order. Please try again later.",
+      });
     }
   }
 };
@@ -104,13 +98,26 @@ export const retrieveAllPurchasesController = async (req, res) => {
     const pageNumber = page ? parseInt(page, 10) : null;
     const pageSize = size ? parseInt(size, 10) : null;
 
-    const purchases = await retrieveAllPurchases(pageNumber, pageSize);
-    res.status(200).json({ success: true, data: purchases });
+    const response = await retrieveAllPurchases(pageNumber, pageSize);
+
+    if (!response.success) {
+      console.error(
+        "Error in retrieveAllPurchasesController:",
+        response.errorDetails
+      );
+      return res.status(500).json({
+        success: false,
+        message: response.message,
+      });
+    }
+
+    res.status(200).json(response);
   } catch (error) {
-    console.error("Error retrieving purchases:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to retrieve purchases" });
+    console.error("Unexpected error in retrieveAllPurchasesController:", error);
+    res.status(500).json({
+      success: false,
+      message: "An unexpected error occurred while retrieving purchases",
+    });
   }
 };
 
@@ -123,17 +130,33 @@ export const retrieveOutstandingPurchasesController = async (req, res) => {
     const pageNumber = page ? parseInt(page, 10) : null;
     const pageSize = size ? parseInt(size, 10) : null;
 
-    const outstandingPurchases = await retrieveOutstandingPurchasesSrv(
+    const response = await retrieveOutstandingPurchasesSrv(
       pageNumber,
       pageSize
     );
 
-    res.status(200).json({ success: true, data: outstandingPurchases });
+    if (!response.success) {
+      console.error(
+        "Error in retrieveOutstandingPurchasesController:",
+        response.errorDetails
+      );
+      return res.status(500).json({
+        success: false,
+        message: response.message,
+      });
+    }
+
+    res.status(200).json(response);
   } catch (error) {
-    console.error("Error retrieving purchases:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to retrieve purchases" });
+    console.error(
+      "Unexpected error in retrieveOutstandingPurchasesController:",
+      error
+    );
+    res.status(500).json({
+      success: false,
+      message:
+        "An unexpected error occurred while retrieving outstanding purchases",
+    });
   }
 };
 
