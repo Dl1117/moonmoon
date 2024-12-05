@@ -107,54 +107,62 @@ export const createSalesInvoice = async (salesOrderIdInvoices) => {
 
 // Retrieve all sales
 export const retrieveAllSales = async (page, size) => {
-  const pagination = {};
+  try {
+    const pagination = {};
 
-  if (page !== null && size !== null) {
-    const offset = page * size;
-    pagination.skip = offset;
-    pagination.take = size;
-  }
+    if (page !== null && size !== null) {
+      const offset = page * size;
+      pagination.skip = offset;
+      pagination.take = size;
+    }
 
-  const sales = await prisma.sales.findMany({
-    ...pagination,
-    include: {
-      salesInvoices: true,
-      salesInfos: {
-        include: {
-          durianVariety: true,
-          bucket: true,
+    const sales = await prisma.sales.findMany({
+      ...pagination,
+      include: {
+        salesInvoices: true,
+        salesInfos: {
+          include: {
+            durianVariety: true,
+            bucket: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  const totalRecords = await prisma.sales.count();
-  const totalPages = size ? Math.ceil(totalRecords / size) : 1;
-  console.log("Total records count query executed by Prisma");
-  console.log(totalRecords);
-  const formattedSales = sales.map((sale) => ({
-    ...sale,
-    salesInfos: sale.salesInfos.map((info) => ({
-      ...info,
-      durianCode: info.durianVariety?.durianCode,
-      durianVariety: undefined, // Remove durianVariety object
-    })),
-    salesInvoices: sale.salesInvoices.map((invoice) => ({
-      ...invoice,
-      image: invoice.image.toString("base64"), // Convert bytes to Base64 string
-    })),
-  }));
+    const totalRecords = await prisma.sales.count();
+    const totalPages = size ? Math.ceil(totalRecords / size) : 1;
+    console.log("Total records count query executed by Prisma");
+    console.log(totalRecords);
+    const formattedSales = sales.map((sale) => ({
+      ...sale,
+      salesInfos: sale.salesInfos.map((info) => ({
+        ...info,
+        durianCode: info.durianVariety?.durianCode,
+        durianVariety: undefined, // Remove durianVariety object
+      })),
+      salesInvoices: sale.salesInvoices.map((invoice) => ({
+        ...invoice,
+        image: invoice.image.toString("base64"), // Convert bytes to Base64 string
+      })),
+    }));
 
-  console.log("page", page);
-  return {
-    sales: formattedSales,
-    pagination: {
-      totalRecords,
-      page: page !== null ? page : null,
-      size: size || null,
-      totalPages: totalPages || null,
-    },
-  };
+    console.log("page", page);
+    return {
+      success: true,
+      data: {
+        sales: formattedSales,
+        pagination: {
+          totalRecords,
+          page: page !== null ? page : null,
+          size: size || null,
+          totalPages: totalPages || null,
+        },
+      },
+    };
+  } catch (error) {
+    console.error("Error in retrieveAllSales:", error.message);
+    throw new Error("Failed to retrieve all sales. Please try again.");
+  }
 };
 
 //SUPERADMIN method
@@ -176,7 +184,9 @@ export const retrieveOutstandingSalesSrv = async (page, size) => {
       include: {
         salesInvoices: true,
         salesInfos: {
-          bucket: true,
+          include: {
+            bucket: true,
+          },
         },
       },
     });
@@ -188,6 +198,7 @@ export const retrieveOutstandingSalesSrv = async (page, size) => {
     });
     const totalPages = size ? Math.ceil(totalRecords / size) : 1;
 
+    console.log("reading outstanding sales...", outstandingSales);
     // Format the response object to include relevant details
     const formattedSales = outstandingSales.map((sale) => ({
       id: sale.id,
@@ -206,27 +217,30 @@ export const retrieveOutstandingSalesSrv = async (page, size) => {
         totalSalesValue: info.totalSalesValue,
         durianVarietyId: info.durianVarietyId,
         salesId: info.salesId,
+        bucket: info.bucket.map((bucket) => ({
+          id: bucket.id,
+          kg: bucket.kg,
+          salesValue: bucket.salesValue,
+        })),
       })),
     }));
 
     // Return the formatted response object
     return {
       success: true,
-      outstandingSales: formattedSales,
-      pagination: {
-        totalRecords,
-        page: page !== null ? page : null,
-        size: size || null,
-        totalPages: totalPages || null,
+      data: {
+        outstandingSales: formattedSales,
+        pagination: {
+          totalRecords,
+          page: page !== null ? page : null,
+          size: size || null,
+          totalPages: totalPages || null,
+        },
       },
-      message: "Outstanding sales retrieved successfully",
     };
   } catch (error) {
-    console.error("Error in outstandingSalesSrv:", error.message);
-    return {
-      success: false,
-      message: "Failed to retrieve outstanding sales",
-    };
+    console.error("Error in retrieveOutstandingSalesSrv:", error.message);
+    throw new Error("Failed to retrieve outstanding sales. Please try again.");
   }
 };
 

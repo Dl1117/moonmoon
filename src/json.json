@@ -1,27 +1,18 @@
-
-{   
-    "companyName": "DL",
-    "salesStatus": "COMPLETED",
-    "salesInfo": [
-    {
-        "durianVarietyId": "24ad4d2a-fae7-41f6-85e6-d837d9988bd7",
-        "pricePerKg": "64",
-        "kgSales": "300",
-        "totalSalesValue": "19200",
-        "basket": [
-          {
-              "kg": 50,
-              "salesValue": 3200 
-          },
-          {           
-              "kg": 100,
-              "salesValue": 6400 
-          },
-          {              
-              "kg": 150,
-              "salesValue": 9600 
-          }
-        ]
-    }
-]
+{
+    "purchaseInfoId": "",
+    "pricePerKg": "", 
+    "kgPurchased": "", 
+    "totalPurchasePrice": "",
+    "basket": [
+        {
+            "id": "",
+            "kg": "",
+            "salesValue":""
+        }
+    ],
+    "deleteBasket": [
+        "basketId",
+        "basketId",
+        "basketId"
+    ]
 }
