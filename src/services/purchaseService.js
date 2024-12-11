@@ -45,7 +45,7 @@ export const createPurchaseOrder = async (purchaseInfos, invoiceImages) => {
                 bucket: {
                   create: basket.map(({ kg, salesValue }) => ({
                     kg,
-                    kgSales: salesValue / parseFloat(pricePerKg), // Calculate sales kg for each bucket
+                    kgSales: salesValue, // Calculate sales kg for each bucket
                   })),
                 },
               })
@@ -125,6 +125,7 @@ export const retrieveAllPurchases = async (page, size) => {
       include: {
         purchaseInfos: {
           include: {
+            durianVariety: true,
             bucket: true,
           },
         },
@@ -146,6 +147,11 @@ export const retrieveAllPurchases = async (page, size) => {
           contact: supplier.contact,
           lorryPlateNumber: supplierLorry.lorryPlateNumber,
         },
+        purchaseInfos: purchase.purchaseInfos.map((info) => ({
+          ...info,
+          durianCode: info.durianVariety?.durianCode, // Extract durianCode
+          durianVariety: undefined, // Remove the durianVariety object
+        })),
         purchaseInvoices: purchase.purchaseInvoices.map((invoice) => ({
           ...invoice,
           image: invoice.image.toString("base64"), // Convert bytes to Base64 string

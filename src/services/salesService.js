@@ -44,7 +44,7 @@ export const createSalesOrder = async (salesInfos, invoiceImages) => {
                 bucket: {
                   create: basket.map(({ kg, salesValue }) => ({
                     kg,
-                    kgSales: salesValue / parseFloat(pricePerKg), // Calculate sales kg for each bucket
+                    kgSales: salesValue, // Calculate sales kg for each bucket
                   })),
                 },
               })
