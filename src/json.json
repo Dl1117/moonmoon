@@ -1,18 +1,10 @@
 {
-    "purchaseInfoId": "",
-    "pricePerKg": "", 
-    "kgPurchased": "", 
-    "totalPurchasePrice": "",
-    "basket": [
+    "expenses": [
         {
-            "id": "",
-            "kg": "",
-            "salesValue":""
+            "expensesType": "", 
+            "expensesAmount": "",
+            "remark": "",
+            "date": ""
         }
-    ],
-    "deleteBasket": [
-        "basketId",
-        "basketId",
-        "basketId"
     ]
 }

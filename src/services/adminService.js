@@ -293,6 +293,15 @@ export const requestAdvancedSalarySrv = async (adminInfo) => {
         },
       });
 
+      //5. Record advanced salary into expenses
+      await prisma.expenses.create({
+        data: {
+          expensesAmount: salaryAdvancedAmount,
+          expensesType: "SALARY",
+          date: new Date(),
+        },
+      });
+
       // Return the new salary advance record and updated admin data
       return {
         salaryAdvance: newSalaryAdvance,
