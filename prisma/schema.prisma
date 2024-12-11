@@ -58,14 +58,15 @@ model PurchaseInvoice {
 }
 
 model PurchaseInfo {
-  id                 String    @id @default(uuid())
+  id                 String         @id @default(uuid())
   pricePerKg         String?
   kgPurchased        String?
   totalPurchasePrice Float?
   durianVarietyId    String?
   purchaseId         String?
-  purchase           Purchase? @relation(fields: [purchaseId], references: [id])
+  purchase           Purchase?      @relation(fields: [purchaseId], references: [id])
   bucket             Bucket[]
+  durianVariety      DurianVariety? @relation(fields: [durianVarietyId], references: [id])
 
   @@map("purchase_info")
 }
@@ -125,10 +126,11 @@ model SalesInfo {
 }
 
 model DurianVariety {
-  id            String      @id @default(uuid())
-  durianCode    String      @unique
+  id            String         @id @default(uuid())
+  durianCode    String         @unique
   stockQuantity Int
   salesInfo     SalesInfo[]
+  purchaseInfo  PurchaseInfo[]
 }
 
 model SalaryAdvanced {
@@ -185,7 +187,7 @@ enum ExpensesType {
   TRANSPORTATION
   ERP
   GSTSINGAPORE
-  MAINTENENCE
+  MAINTENANCE
   PETROL
   SALARY
   CARRENTAL
