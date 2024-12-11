@@ -1,16 +1,16 @@
-import { PrismaClient } from '@prisma/client';
-import { DateTime } from 'luxon'; // Optional: For time zone handling
+import { PrismaClient } from "@prisma/client";
+import { DateTime } from "luxon"; // Optional: For time zone handling
 
 const prisma = new PrismaClient();
 
 export const calculateDailyProfitLossSrv = async () => {
   // Get the current time in Malaysia (MYT, UTC+8)
-  const today = DateTime.now().setZone('Asia/Kuala_Lumpur'); // Luxon to handle MYT time zone
+  const today = DateTime.now().setZone("Asia/Kuala_Lumpur"); // Luxon to handle MYT time zone
 
   // Set the date range to today (start of today to end of today) in MYT
-  const startOfDay = today.startOf('day').toISO(); // Start of the day in ISO format (MYT)
-  const endOfDay = today.endOf('day').toISO(); // End of the day in ISO format (MYT)
-  const startOfMonth = today.startOf('month').toISO();
+  const startOfDay = today.startOf("day").toISO(); // Start of the day in ISO format (MYT)
+  const endOfDay = today.endOf("day").toISO(); // End of the day in ISO format (MYT)
+  const startOfMonth = today.startOf("month").toISO();
 
   try {
     // Retrieve total sales for today in MYT (sum totalSalesValue from SalesInfo)
@@ -22,12 +22,11 @@ export const calculateDailyProfitLossSrv = async () => {
         sales: {
           salesDate: {
             gte: new Date(startOfDay), // startOfDay should be a Date object
-            lte: new Date(endOfDay),   // endOfDay should be a Date object
+            lte: new Date(endOfDay), // endOfDay should be a Date object
           },
         },
       },
     });
-    
 
     // Retrieve total purchases for today in MYT (sum totalPurchasePrice from PurchaseInfo)
     const totalPurchases = await prisma.purchaseInfo.aggregate({
@@ -35,13 +34,24 @@ export const calculateDailyProfitLossSrv = async () => {
         totalPurchasePrice: true, // Sum of totalPurchasePrice in PurchaseInfo
       },
       where: {
-        purchase:{
+        purchase: {
           purchaseDate: {
             gte: new Date(startOfDay), // Convert startOfDay to Date object
-            lte: new Date(endOfDay),    // Convert endOfDay to Date object
+            lte: new Date(endOfDay), // Convert endOfDay to Date object
           },
-        }
-       
+        },
+      },
+    });
+
+    const totalExpenses = await prisma.expenses.aggregate({
+      _sum: {
+        expensesAmount: true,
+      },
+      where: {
+        date: {
+          gte: new Date(startOfDay), // Convert startOfDay to Date object
+          lte: new Date(endOfDay),
+        },
       },
     });
 
@@ -54,10 +64,9 @@ export const calculateDailyProfitLossSrv = async () => {
         sales: {
           salesDate: {
             gte: new Date(startOfMonth), // Start of the month
-            lte: new Date(endOfDay),    // End of today
+            lte: new Date(endOfDay), // End of today
           },
-        }
-       
+        },
       },
     });
 
@@ -70,26 +79,45 @@ export const calculateDailyProfitLossSrv = async () => {
         purchase: {
           purchaseDate: {
             gte: new Date(startOfMonth), // Start of the month
-            lte: new Date(endOfDay),    // End of today
+            lte: new Date(endOfDay), // End of today
           },
-        }
-       
+        },
+      },
+    });
+
+    const totalExpensesMonth = await prisma.expenses.aggregate({
+      _sum: {
+        expensesAmount: true,
+      },
+      where: {
+        date: {
+          gte: new Date(startOfMonth), // Start of the month
+          lte: new Date(endOfDay), // End of today
+        },
       },
     });
 
     // Calculate daily profit/loss (Sales - Purchases)
     const salesTotal = totalSales._sum.totalSalesValue || 0;
     const purchaseTotal = totalPurchases._sum.totalPurchasePrice || 0;
-    const dailyProfitLoss = parseFloat(salesTotal) - parseFloat(purchaseTotal);
+    const expenseTotal = totalExpenses._sum.expensesAmount || 0;
+    const dailyProfitLoss =
+      parseFloat(salesTotal) -
+      parseFloat(purchaseTotal) -
+      parseFloat(expenseTotal);
 
     // Calculate profit/loss from the start of the month to today
     const salesMonth = totalSalesMonth._sum.totalSalesValue || 0;
     const purchasesMonth = totalPurchasesMonth._sum.totalPurchasePrice || 0;
-    const profitLossMonth = parseFloat(salesMonth) - parseFloat(purchasesMonth);
+    const expenseMonth = totalExpensesMonth._sum.expensesAmount || 0;
+    const profitLossMonth =
+      parseFloat(salesMonth) -
+      parseFloat(purchasesMonth) -
+      parseFloat(expenseMonth);
 
     return {
       success: true,
-      message: 'Daily and monthly profit/loss calculated successfully',
+      message: "Daily and monthly profit/loss calculated successfully",
       data: {
         dailyProfitLoss,
         totalDailySales: salesTotal,
@@ -98,19 +126,15 @@ export const calculateDailyProfitLossSrv = async () => {
       },
     };
   } catch (error) {
-    console.error('Error calculating daily profit/loss:', error.message);
+    console.error("Error calculating daily profit/loss:", error.message);
     return {
       success: false,
-      message: 'Failed to calculate daily and monthly profit/lNoss',
+      message: "Failed to calculate daily and monthly profit/lNoss",
       error: error.message,
     };
   }
 };
 
-
-
 //calculate gross profit/loss need to deduct the expenses
 //and also need to deduct the outstanding payment
-export const calculateGrossProfitLosss = async () => {
-
-}
+export const calculateGrossProfitLosss = async () => {};

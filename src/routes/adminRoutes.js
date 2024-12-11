@@ -7,10 +7,12 @@ import { changeSalesInfoInformationController, createSalesInvoiceController, cre
 import { authenticateJWT, verifySuperAdminRole } from '../middleware/authMiddleware.js';
 import { upload } from '../middleware/mutlerConfig.js';
 import { calculateDailyProfitLossController } from '../controller/pLController.js';
+import { createExpensesController, retrieveAllExpenses, retrieveDailyExpenses } from '../controller/expensesController.js';
 const adminRoutes = express.Router();
 
 // Route for admin/superadmin login
 adminRoutes.post('/login', adminLogin);
+
 
 // Middleware to protect routes
 adminRoutes.use(authenticateJWT); // Protect all subsequent routes except admin login and create account
@@ -34,18 +36,23 @@ adminRoutes.post('/create-sales-order', upload.array('invoiceImages'), createSal
 adminRoutes.post('/upload-sales-invoice',upload.array("invoiceImages"), createSalesInvoiceController);
 adminRoutes.get('/get-all-sales', retrieveAllSalesController);
 
+//Route for handling expenses
+adminRoutes.post('/create-expenses', createExpensesController);
+adminRoutes.post('/retrieve-today-expenses', retrieveDailyExpenses);
+adminRoutes.post('/retrieve-all-expenses', retrieveAllExpenses);
+
 
 // Route for SUPERADMIN
 adminRoutes.use(verifySuperAdminRole);
 adminRoutes.post('/sales-cancel/:salesId', superAdminCancellingSalesOrderCtr);
 adminRoutes.post('/purchase-cancel/:purchaseId', superAdminCancellingPurchaseOrderCtr);
-adminRoutes.post('/create-account', createAdminAccount);
 adminRoutes.post('/request-advanced-salary', requestAdvancedSalaryCtr);
 adminRoutes.get('/get-all-outstanding-purchases', retrieveOutstandingPurchasesController);
 adminRoutes.post('/update-purchase-info', changePurchaseInfoInformationController);
 adminRoutes.get('/profit-loss', calculateDailyProfitLossController);
 adminRoutes.get('/get-all-outstanding-sales', retrieveOutstandingSalesController);
 adminRoutes.post('/update-sales-info', changeSalesInfoInformationController);
+adminRoutes.post('/create-account', createAdminAccount);
 
 
 export default adminRoutes;

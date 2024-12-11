@@ -153,6 +153,14 @@ model Bucket {
   purchaseInfo   PurchaseInfo? @relation(fields: [purchaseInfoId], references: [id])
 }
 
+model Expenses {
+  id             String       @id @default(uuid())
+  expensesType   ExpensesType
+  expensesAmount Float
+  remark         String
+  date           DateTime
+}
+
 // Define enums for user types and purchase/sales statuses
 enum UserType {
   ADMIN
@@ -171,4 +179,16 @@ enum SalesStatus {
   COMPLETED
   CANCELLED
   OUTSTANDING
+}
+
+enum ExpensesType {
+  TRANSPORTATION
+  ERP
+  GSTSINGAPORE
+  MAINTENENCE
+  PETROL
+  SALARY
+  CARRENTAL
+  FOOD
+  OTHERS
 }
