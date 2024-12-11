@@ -38,8 +38,8 @@ adminRoutes.get('/get-all-sales', retrieveAllSalesController);
 
 //Route for handling expenses
 adminRoutes.post('/create-expenses', createExpensesController);
-adminRoutes.post('/retrieve-today-expenses', retrieveDailyExpenses);
-adminRoutes.post('/retrieve-all-expenses', retrieveAllExpenses);
+adminRoutes.get('/retrieve-today-expenses', retrieveDailyExpenses);
+adminRoutes.get('/retrieve-all-expenses', retrieveAllExpenses);
 
 
 // Route for SUPERADMIN
