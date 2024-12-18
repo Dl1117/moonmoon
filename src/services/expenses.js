@@ -120,7 +120,12 @@ export const retrieveTodayExpensesService = async () => {
   }
 };
 
-export const retrieveAllGroupedExpensesService = async (page, size) => {
+export const retrieveAllGroupedExpensesService = async (
+  page,
+  size,
+  month,
+  week
+) => {
   try {
     const pagination = {};
 
@@ -129,22 +134,67 @@ export const retrieveAllGroupedExpensesService = async (page, size) => {
       pagination.skip = offset;
       pagination.take = size;
     }
+    let dateFilter = null;
+
+    if (month || week) {
+      const currentYear = new Date().getFullYear();
+      const filterMonth = month ? month - 1 : new Date().getMonth(); // Default to current month if not provided
+
+      if (week) {
+        // Week-specific filtering
+        const firstDayOfMonth = new Date(currentYear, filterMonth, 1);
+        const weekStart = new Date(
+          firstDayOfMonth.getFullYear(),
+          firstDayOfMonth.getMonth(),
+          (week - 1) * 7 + 1
+        );
+        const weekEnd = new Date(
+          firstDayOfMonth.getFullYear(),
+          firstDayOfMonth.getMonth(),
+          week * 7 + 1
+        );
+
+        // Ensure the week range is valid within the specified month
+        dateFilter = {
+          date: {
+            gte: weekStart,
+            lt: new Date(
+              Math.min(
+                weekEnd.getTime(),
+                new Date(currentYear, filterMonth + 1, 1).getTime() // Start of the next month
+              )
+            ),
+          },
+        };
+      } else {
+        // Month-specific filtering
+        dateFilter = {
+          date: {
+            gte: new Date(currentYear, filterMonth, 1), // Start of the month
+            lt: new Date(currentYear, filterMonth + 1, 1), // Start of the next month
+          },
+        };
+      }
+    }
     // Retrieve all expenses from the database
     const allExpenses = await prisma.expenses.findMany({
       ...pagination,
+      where: {
+        ...dateFilter,
+      },
       orderBy: {
         date: "asc", // Sort by date in ascending order (earliest first)
       },
     });
 
     // Check if there are any expenses
-    if (allExpenses.length === 0) {
-      return {
-        success: true,
-        message: "No expenses found.",
-        data: [],
-      };
-    }
+    // if (allExpenses.length === 0) {
+    //   return {
+    //     success: true,
+    //     message: "No expenses found.",
+    //     data: [],
+    //   };
+    // }
 
     // Group expenses by date
     const groupedExpenses = allExpenses.reduce((acc, expense) => {
