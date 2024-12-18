@@ -44,7 +44,7 @@ export const createSalesOrder = async (salesInfos, invoiceImages) => {
                 bucket: {
                   create: basket.map(({ kg, salesValue }) => ({
                     kg,
-                    kgSales: salesValue, // Calculate sales kg for each bucket
+                    //kgSales: salesValue, // Calculate sales kg for each bucket
                   })),
                 },
               })
@@ -106,7 +106,7 @@ export const createSalesInvoice = async (salesOrderIdInvoices) => {
 };
 
 // Retrieve all sales
-export const retrieveAllSales = async (page, size) => {
+export const retrieveAllSales = async (page, size, month, week) => {
   try {
     const pagination = {};
 
@@ -116,8 +116,53 @@ export const retrieveAllSales = async (page, size) => {
       pagination.take = size;
     }
 
+    let dateFilter = null;
+
+    if (month || week) {
+      const currentYear = new Date().getFullYear();
+      const filterMonth = month ? month - 1 : new Date().getMonth(); // Default to current month if month is not provided
+
+      if (week) {
+        // Calculate week range within the specified or default month
+        const firstDayOfMonth = new Date(currentYear, filterMonth, 1);
+        const weekStart = new Date(
+          firstDayOfMonth.getFullYear(),
+          firstDayOfMonth.getMonth(),
+          (week - 1) * 7 + 1
+        );
+        const weekEnd = new Date(
+          firstDayOfMonth.getFullYear(),
+          firstDayOfMonth.getMonth(),
+          week * 7 + 1
+        );
+
+        // Ensure the week range is within the month bounds
+        dateFilter = {
+          salesDate: {
+            gte: weekStart,
+            lt: new Date(
+              Math.min(
+                weekEnd.getTime(),
+                new Date(currentYear, filterMonth + 1, 1).getTime() // Start of the next month
+              )
+            ), // Convert timestamp to Date
+          },
+        };
+      } else {
+        // If only month is provided, filter the entire month
+        dateFilter = {
+          salesDate: {
+            gte: new Date(currentYear, filterMonth, 1), // Start of the month
+            lt: new Date(currentYear, filterMonth + 1, 1), // Start of the next month
+          },
+        };
+      }
+    }
     const sales = await prisma.sales.findMany({
       ...pagination,
+      where: {
+        ...dateFilter,
+      },
       include: {
         salesInvoices: true,
         salesInfos: {
@@ -166,7 +211,7 @@ export const retrieveAllSales = async (page, size) => {
 };
 
 //SUPERADMIN method
-export const retrieveOutstandingSalesSrv = async (page, size) => {
+export const retrieveOutstandingSalesSrv = async (page, size, month, week) => {
   try {
     // Fetch outstanding sales with status "PENDING" and include related invoices and sales info
     const pagination = {};
@@ -176,10 +221,54 @@ export const retrieveOutstandingSalesSrv = async (page, size) => {
       pagination.skip = offset;
       pagination.take = size;
     }
+
+    let dateFilter = null;
+
+    if (month || week) {
+      const currentYear = new Date().getFullYear();
+      const filterMonth = month ? month - 1 : new Date().getMonth(); // Default to current month if month is not provided
+
+      if (week) {
+        // Calculate week range within the specified or default month
+        const firstDayOfMonth = new Date(currentYear, filterMonth, 1);
+        const weekStart = new Date(
+          firstDayOfMonth.getFullYear(),
+          firstDayOfMonth.getMonth(),
+          (week - 1) * 7 + 1
+        );
+        const weekEnd = new Date(
+          firstDayOfMonth.getFullYear(),
+          firstDayOfMonth.getMonth(),
+          week * 7 + 1
+        );
+
+        // Ensure the week range is within the month bounds
+        dateFilter = {
+          salesDate: {
+            gte: weekStart,
+            lt: new Date(
+              Math.min(
+                weekEnd.getTime(),
+                new Date(currentYear, filterMonth + 1, 1).getTime() // Start of the next month
+              )
+            ), // Convert timestamp to Date
+          },
+        };
+      } else {
+        // If only month is provided, filter the entire month
+        dateFilter = {
+          salesDate: {
+            gte: new Date(currentYear, filterMonth, 1), // Start of the month
+            lt: new Date(currentYear, filterMonth + 1, 1), // Start of the next month
+          },
+        };
+      }
+    }
     const outstandingSales = await prisma.sales.findMany({
       ...pagination,
       where: {
         salesStatus: "OUTSTANDING",
+        ...dateFilter,
       },
       include: {
         salesInvoices: true,

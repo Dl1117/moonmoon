@@ -63,15 +63,18 @@ export const retrieveDailyExpenses = async (req, res) => {
 
 export const retrieveAllExpenses = async (req, res) => {
   try {
-    const { page, size } = req.query;
+    const { page, size, month, week } = req.query;
 
     // Convert `page` and `size` to numbers and provide default values if not supplied
     const pageNumber = page ? parseInt(page, 10) : null;
     const pageSize = size ? parseInt(size, 10) : null;
-
+    const filterMonth = month ? parseInt(month, 10) : null;
+    const filterWeek = week ? parseInt(week, 10) : null;
     const result = await retrieveAllGroupedExpensesService(
       pageNumber,
-      pageSize
+      pageSize,
+      filterMonth,
+      filterWeek
     );
     res.status(200).json(result);
   } catch (error) {

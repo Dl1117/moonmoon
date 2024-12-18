@@ -67,13 +67,19 @@ export const createSalesInvoiceController = async (req, res) => {
 // Controller to retrieve all sales
 export const retrieveAllSalesController = async (req, res) => {
   try {
-    const { page, size } = req.query;
+    const { page, size, month, week } = req.query;
 
     // Convert `page` and `size` to numbers and provide default values if not supplied
     const pageNumber = page ? parseInt(page, 10) : null;
     const pageSize = size ? parseInt(size, 10) : null;
-
-    const result = await retrieveAllSales(pageNumber, pageSize);
+    const filterMonth = month ? parseInt(month, 10) : null;
+    const filterWeek = week ? parseInt(week, 10) : null;
+    const result = await retrieveAllSales(
+      pageNumber,
+      pageSize,
+      filterMonth,
+      filterWeek
+    );
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     console.error("Error retrieving sales:", error);
@@ -86,15 +92,18 @@ export const retrieveAllSalesController = async (req, res) => {
 //SUPERADMIN controller
 export const retrieveOutstandingSalesController = async (req, res) => {
   try {
-    const { page, size } = req.query;
+    const { page, size, month, week } = req.query;
 
     // Convert `page` and `size` to numbers and provide default values if not supplied
     const pageNumber = page ? parseInt(page, 10) : null;
     const pageSize = size ? parseInt(size, 10) : null;
-
+    const filterMonth = month ? parseInt(month, 10) : null;
+    const filterWeek = week ? parseInt(week, 10) : null;
     const outstandingSales = await retrieveOutstandingSalesSrv(
       pageNumber,
-      pageSize
+      pageSize,
+      filterMonth,
+      filterWeek
     );
     res.status(200).json(outstandingSales);
   } catch (error) {
@@ -102,12 +111,10 @@ export const retrieveOutstandingSalesController = async (req, res) => {
       "Error in retrieveOutstandingSalesController:",
       error.message
     );
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: error.message || "Internal Server Error",
-      });
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
   }
 };
 

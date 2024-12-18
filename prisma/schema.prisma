@@ -148,7 +148,7 @@ model SalaryAdvanced {
 model Bucket {
   id             String        @id @default(uuid())
   kg             Float
-  kgSales        Float
+  //kgSales        Float
   salesInfoId    String?
   purchaseInfoId String?
   salesInfo      SalesInfo?    @relation(fields: [salesInfoId], references: [id])
