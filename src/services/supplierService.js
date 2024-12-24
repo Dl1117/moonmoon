@@ -58,7 +58,7 @@ export const getSuppliersWithLorries = async (page, size, month, week) => {
 
       // Ensure the week range is within the month bounds
       dateFilter = {
-        salesDate: {
+        date: {
           gte: weekStart,
           lt: new Date(
             Math.min(
@@ -71,7 +71,7 @@ export const getSuppliersWithLorries = async (page, size, month, week) => {
     } else {
       // If only month is provided, filter the entire month
       dateFilter = {
-        salesDate: {
+        date: {
           gte: new Date(currentYear, filterMonth, 1), // Start of the month
           lt: new Date(currentYear, filterMonth + 1, 1), // Start of the next month
         },

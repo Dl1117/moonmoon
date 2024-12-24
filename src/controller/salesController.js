@@ -80,7 +80,7 @@ export const retrieveAllSalesController = async (req, res) => {
       filterMonth,
       filterWeek
     );
-    res.status(200).json({ success: true, data: result });
+    res.status(200).json(result);
   } catch (error) {
     console.error("Error retrieving sales:", error);
     res
