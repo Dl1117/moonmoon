@@ -241,3 +241,210 @@ export const retrieveAllGroupedExpensesService = async (
     throw new Error("Failed to retrieve all expenses. Please try again.");
   }
 };
+
+
+
+//BELOW ARE FOR NON-PRISMA
+
+// import { Expenses } from "../../config/database.js"; // Ensure sequelize and Expenses model are properly defined
+
+// export const createExpensesService = async (expenses) => {
+//   try {
+//     if (!Array.isArray(expenses) || expenses.length === 0) {
+//       throw new Error("Expenses input must be a non-empty array.");
+//     }
+
+//     const expensesData = expenses.map((expense) => {
+//       const { expensesType, expensesAmount, remark, date } = expense;
+
+//       if (!expensesType || !expensesAmount) {
+//         throw new Error(
+//           "Each expense must include expensesType and expensesAmount."
+//         );
+//       }
+
+//       return {
+//         expensesType,
+//         expensesAmount: parseFloat(expensesAmount),
+//         remark: remark || "",
+//         date: date ? new Date(date) : new Date(),
+//       };
+//     });
+
+//     const result = await sequelize.transaction(async (transaction) => {
+//       const createdExpenses = [];
+
+//       for (const expense of expensesData) {
+//         const existingExpense = await Expenses.findOne({
+//           where: {
+//             expensesType: expense.expensesType,
+//             date: {
+//               [sequelize.Sequelize.Op.between]: [
+//                 new Date(new Date().setHours(0, 0, 0, 0)),
+//                 new Date(new Date().setHours(23, 59, 59, 999)),
+//               ],
+//             },
+//           },
+//           transaction,
+//         });
+
+//         if (existingExpense) {
+//           const updatedExpense = await existingExpense.update(
+//             {
+//               expensesAmount:
+//                 existingExpense.expensesAmount + expense.expensesAmount,
+//             },
+//             { transaction }
+//           );
+//           createdExpenses.push(updatedExpense);
+//         } else {
+//           const newExpense = await Expenses.create(expense, { transaction });
+//           createdExpenses.push(newExpense);
+//         }
+//       }
+
+//       return createdExpenses;
+//     });
+
+//     return {
+//       success: true,
+//       message: `${result.length} expenses processed successfully.`,
+//       data: result,
+//     };
+//   } catch (error) {
+//     return {
+//       success: false,
+//       message: error.message,
+//       data: null,
+//     };
+//   }
+// };
+
+// export const retrieveTodayExpensesService = async () => {
+//   try {
+//     const startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
+//     const endOfDay = new Date(new Date().setHours(23, 59, 59, 999));
+
+//     const todaysExpenses = await Expenses.findAll({
+//       where: {
+//         date: {
+//           [sequelize.Sequelize.Op.between]: [startOfDay, endOfDay],
+//         },
+//       },
+//     });
+
+//     if (todaysExpenses.length === 0) {
+//       return {
+//         success: true,
+//         message: "No expenses found for today.",
+//         data: [],
+//       };
+//     }
+
+//     return {
+//       success: true,
+//       message: `Retrieved ${todaysExpenses.length} expenses for today.`,
+//       data: todaysExpenses,
+//     };
+//   } catch (error) {
+//     console.error("Error in retrieveTodayExpensesService:", error.message);
+//     throw new Error("Failed to retrieve daily expenses. Please try again.");
+//   }
+// };
+
+// export const retrieveAllGroupedExpensesService = async (page, size, month, week) => {
+//   try {
+//     const pagination = {};
+
+//     if (page !== null && size !== null) {
+//       const offset = page * size;
+//       pagination.offset = offset;
+//       pagination.limit = size;
+//     }
+
+//     let dateFilter = {};
+
+//     if (month || week) {
+//       const currentYear = new Date().getFullYear();
+//       const filterMonth = month ? month - 1 : new Date().getMonth();
+
+//       if (week) {
+//         const firstDayOfMonth = new Date(currentYear, filterMonth, 1);
+//         const weekStart = new Date(
+//           firstDayOfMonth.getFullYear(),
+//           firstDayOfMonth.getMonth(),
+//           (week - 1) * 7 + 1
+//         );
+//         const weekEnd = new Date(
+//           firstDayOfMonth.getFullYear(),
+//           firstDayOfMonth.getMonth(),
+//           week * 7 + 1
+//         );
+
+//         dateFilter.date = {
+//           [sequelize.Sequelize.Op.between]: [
+//             weekStart,
+//             new Date(
+//               Math.min(
+//                 weekEnd.getTime(),
+//                 new Date(currentYear, filterMonth + 1, 1).getTime()
+//               )
+//             ),
+//           ],
+//         };
+//       } else {
+//         dateFilter.date = {
+//           [sequelize.Sequelize.Op.between]: [
+//             new Date(currentYear, filterMonth, 1),
+//             new Date(currentYear, filterMonth + 1, 1),
+//           ],
+//         };
+//       }
+//     }
+
+//     const allExpenses = await Expenses.findAll({
+//       ...pagination,
+//       where: dateFilter,
+//       order: [["date", "ASC"]],
+//     });
+
+//     const groupedExpenses = allExpenses.reduce((acc, expense) => {
+//       const expenseDate = expense.date.toISOString().split("T")[0];
+
+//       if (!acc[expenseDate]) {
+//         acc[expenseDate] = [];
+//       }
+
+//       acc[expenseDate].push(expense);
+
+//       return acc;
+//     }, {});
+
+//     const sortedGroupedExpenses = Object.keys(groupedExpenses)
+//       .sort()
+//       .map((date) => ({
+//         date,
+//         expensesType: groupedExpenses[date],
+//       }));
+
+//     const totalRecords = await Expenses.count();
+//     const totalPages = size ? Math.ceil(totalRecords / size) : 1;
+
+//     return {
+//       success: true,
+//       message: `Retrieved and grouped expenses by date.`,
+//       data: {
+//         expenses: sortedGroupedExpenses,
+//         pagination: {
+//           totalRecords,
+//           page: page !== null ? page : null,
+//           size: size || null,
+//           totalPages: totalPages || null,
+//         },
+//       },
+//     };
+//   } catch (error) {
+//     console.error("Error in retrieveAllGroupedExpensesService:", error.message);
+//     throw new Error("Failed to retrieve all expenses. Please try again.");
+//   }
+// };

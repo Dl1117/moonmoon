@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs"; // Use bcryptjs instead
 import jwt from "jsonwebtoken";
+import { Admin, AdminJwt, Sales, Purchase, SalaryAdvance, Expenses } from "../../config/database";
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -345,3 +346,161 @@ export const requestAdvancedSalarySrv = async (adminInfo) => {
     };
   }
 };
+
+
+
+
+
+
+//BELOW ARE FOR NON PRISMA
+
+
+
+// // Import required modules and models
+// import bcrypt from "bcryptjs";
+// import jwt from "jsonwebtoken";
+// import { Admin, AdminJwt, Sales, Purchase, SalaryAdvanced, Expenses } from "../../config/database.js";
+// const JWT_SECRET = "3d41e7e862e5cd64b59714016b9c24428b8b3344b3541b1f7729ca36c6fc3dc8";
+
+// // Create Admin Account
+// export const createAdminAcc = async ({ username, loginId, password }) => {
+//   if (!username || !loginId || !password) {
+//     throw new Error("Username, loginId, and password are required.");
+//   }
+
+//   try {
+//     const encryptedPassword = await bcrypt.hash(password, 10);
+
+//     const existingAdmin = await Admin.findOne({ where: { loginId } });
+//     if (existingAdmin) {
+//       throw new Error("An admin with this login ID already exists.");
+//     }
+
+//     const newAdmin = await Admin.create({
+//       username,
+//       loginId,
+//       password: encryptedPassword,
+//       userType: "ADMIN",
+//     });
+
+//     return { success: true, data: newAdmin };
+//   } catch (error) {
+//     throw new Error(error.message || "Failed to create admin account.");
+//   }
+// };
+
+// // Admin Login Authentication
+// export const adminLoginAuth = async ({ loginId, password }) => {
+//   try {
+//     const admin = await Admin.findOne({ where: { loginId } });
+//     if (!admin) {
+//       throw new Error("Admin not found");
+//     }
+
+//     const passwordMatches = await bcrypt.compare(password, admin.password);
+//     if (!passwordMatches) {
+//       throw new Error("Incorrect password");
+//     }
+
+//     const accessToken = jwt.sign(
+//       { adminId: admin.id, loginId: admin.loginId, role: admin.userType },
+//       JWT_SECRET,
+//       { expiresIn: "1h" }
+//     );
+
+//     const refreshToken = jwt.sign(
+//       { adminId: admin.id, loginId: admin.loginId, role: admin.userType },
+//       JWT_SECRET,
+//       { expiresIn: "8h" }
+//     );
+
+//     await AdminJwt.upsert({
+//       adminId: admin.id,
+//       accessToken,
+//       refreshToken,
+//       accessTokenExpiryDate: new Date(Date.now() + 3600000),
+//       refreshTokenExpiryDate: new Date(Date.now() + 3600000 * 8),
+//     });
+
+//     return { admin, accessToken, refreshToken };
+//   } catch (error) {
+//     throw new Error(error.message || "Failed to authenticate admin login.");
+//   }
+// };
+
+// // Cancel Sales Order
+// export const superAdminCancellingSalesOrderSrv = async (salesId) => {
+//   try {
+//     const salesOrder = await Sales.findOne({ where: { id: salesId } });
+//     if (!salesOrder) {
+//       throw new Error("Sales order not found");
+//     }
+
+//     const updatedSalesOrder = await Sales.update(
+//       { salesStatus: "CANCELLED" },
+//       { where: { id: salesId } }
+//     );
+
+//     return updatedSalesOrder;
+//   } catch (error) {
+//     throw new Error(error.message || "Failed to cancel sales order.");
+//   }
+// };
+
+// // Cancel Purchase Order
+// export const superAdminCancellingPurchaseOrderSrv = async (purchaseId) => {
+//   try {
+//     const purchaseOrder = await Purchase.findOne({ where: { id: purchaseId } });
+//     if (!purchaseOrder) {
+//       throw new Error("Purchase order not found");
+//     }
+
+//     const updatedPurchaseOrder = await Purchase.update(
+//       { purchaseStatus: "CANCELLED" },
+//       { where: { id: purchaseId } }
+//     );
+
+//     return updatedPurchaseOrder;
+//   } catch (error) {
+//     throw new Error(error.message || "Failed to cancel purchase order.");
+//   }
+// };
+
+// // Request Advanced Salary
+// export const requestAdvancedSalarySrv = async ({ adminId, salaryAdvancedAmount }) => {
+//   if (!adminId || !salaryAdvancedAmount) {
+//     return { success: false, message: "Admin ID and salary advanced amount are required." };
+//   }
+
+//   try {
+//     const admin = await Admin.findOne({ where: { id: adminId } });
+//     if (!admin) {
+//       throw new Error("Admin not found");
+//     }
+
+//     if (isNaN(salaryAdvancedAmount) || salaryAdvancedAmount <= 0) {
+//       throw new Error("Invalid salary advanced amount provided");
+//     }
+
+//     const salary = parseFloat(admin.salary || "0");
+//     const advanceAmount = parseFloat(salaryAdvancedAmount);
+//     const updatedOutstandingAmount = advanceAmount - salary;
+
+//     const newSalaryAdvance = await SalaryAdvanced.create({
+//       adminId,
+//       salaryAdvancedAmount,
+//       outstandingAmount: updatedOutstandingAmount,
+//       requestDate: new Date(),
+//     });
+
+//     await Expenses.create({
+//       expensesAmount: salaryAdvancedAmount,
+//       expensesType: "SALARY",
+//       date: new Date(),
+//     });
+
+//     return { success: true, message: "Salary advanced request processed successfully", data: newSalaryAdvance };
+//   } catch (error) {
+//     throw new Error(error.message || "Failed to process salary advance request.");
+//   }
+// };

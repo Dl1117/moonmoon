@@ -2,9 +2,11 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import adminRoutes from './src/routes/adminRoutes.js'
 import cors from 'cors';
-const app = express();
-const port = process.env.PORT || 3000;
+import dotenv from 'dotenv';
 
+const app = express();
+const port = process.env.PORT || 4000;
+dotenv.config();
 // Middleware
 
 app.use(cors());
@@ -22,6 +24,10 @@ app.use((req, res, next) => {
 // Routes
 app.use('/admin', adminRoutes);
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+// app.listen(port, () => {
+//   console.log(`Server is running on http://localhost:${port}`);
+// });
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server is running on port ${port}`);
 });
+
