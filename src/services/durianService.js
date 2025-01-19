@@ -70,3 +70,88 @@ export const getDurianVariety = async (page, size) => {
     },
   };
 };
+
+
+
+//BELOW ARE FOR NON PRISMA
+// import { DurianVariety } from '../../config/database.js';
+// export const createOrUpdateDurianVariety = async (durianDto) => {
+//   const { durianCode, stockQuantity: stockQuantityInput } = durianDto;
+
+//   // Convert stockQuantity to an integer if it’s a string
+//   let stockQuantity = parseInt(stockQuantityInput, 10);
+
+//   try {
+//     // Start transaction
+//     const result = await sequelize.transaction(async (t) => {
+//       // Check if the durian code exists
+//       const durian = await DurianVariety.findOne({
+//         where: { durianCode },
+//         transaction: t,  // Pass transaction
+//       });
+
+//       if (durian) {
+//         // Update stock quantity if durian code exists
+//         const updatedDurian = await durian.update(
+//           {
+//             stockQuantity: durian.stockQuantity + stockQuantity,
+//           },
+//           { transaction: t }
+//         );
+
+//         // Return response with message indicating an update
+//         return {
+//           message: "Durian code exists; stock quantity updated successfully.",
+//           data: updatedDurian,
+//         };
+//       } else {
+//         // Create a new durian record if the code doesn't exist
+//         const newDurian = await DurianVariety.create(
+//           {
+//             durianCode,
+//             stockQuantity,
+//           },
+//           { transaction: t }
+//         );
+
+//         // Return response indicating a new record was created
+//         return {
+//           message: "New durian variety created successfully.",
+//           data: newDurian,
+//         };
+//       }
+//     });
+
+//     return result;
+//   } catch (error) {
+//     throw new Error(error.message || "Failed to create or update durian variety.");
+//   }
+// };
+
+// export const getDurianVariety = async (page, size) => {
+//   const pagination = {};
+
+//   if (page !== null && size !== null) {
+//     const offset = page * size;
+//     pagination.offset = offset;
+//     pagination.limit = size;
+//   }
+
+//   try {
+//     const durianVariety = await DurianVariety.findAll(pagination);
+//     const totalRecords = await DurianVariety.count();
+//     const totalPages = size ? Math.ceil(totalRecords / size) : 1;
+
+//     return {
+//       durianVariety,
+//       pagination: {
+//         totalRecords,
+//         page: page !== null ? page : null,
+//         size: size || null,
+//         totalPages: totalPages || null,
+//       },
+//     };
+//   } catch (error) {
+//     throw new Error(error.message || "Failed to retrieve durian variety.");
+//   }
+// };

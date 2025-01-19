@@ -23,6 +23,8 @@ export const handleCreateOrUpdateDurianVariety = async (req, res) => {
 
 export const fetchDurianVarieties = async (req, res) => {
   try {
+    const memoryUsage = process.memoryUsage();
+    console.log('Memory Usage:', memoryUsage);
     const { page, size } = req.query;
 
     // Convert `page` and `size` to numbers and provide default values if not supplied
