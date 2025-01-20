@@ -139,7 +139,13 @@ export const changeSalesInfoInformationController = async (req, res) => {
       });
     }
     // If everything went fine, send the success response
-    res.status(200).json({ success: true, data: result });
+    res
+      .status(200)
+      .json({
+        success: true,
+        data: result,
+        message: "Successfully updated sales info",
+      });
   } catch (error) {
     // Handle specific errors based on the error message or type
     console.error("Error occurred while processing request:", error);

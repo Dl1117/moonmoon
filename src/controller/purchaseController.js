@@ -100,7 +100,12 @@ export const retrieveAllPurchasesController = async (req, res) => {
     const filterMonth = month ? parseInt(month, 10) : null;
     const filterWeek = week ? parseInt(week, 10) : null;
 
-    const response = await retrieveAllPurchases(pageNumber, pageSize, filterMonth, filterWeek);
+    const response = await retrieveAllPurchases(
+      pageNumber,
+      pageSize,
+      filterMonth,
+      filterWeek
+    );
 
     if (!response.success) {
       console.error(
@@ -126,7 +131,7 @@ export const retrieveAllPurchasesController = async (req, res) => {
 //SUPERADMIN controller
 export const retrieveOutstandingPurchasesController = async (req, res) => {
   try {
-    const { page, size, month,  week } = req.query;
+    const { page, size, month, week } = req.query;
 
     // Convert `page` and `size` to numbers and provide default values if not supplied
     const pageNumber = page ? parseInt(page, 10) : null;
@@ -168,27 +173,29 @@ export const retrieveOutstandingPurchasesController = async (req, res) => {
 export const changePurchaseInfoInformationController = async (req, res) => {
   try {
     console.log("reading purchase info request.body...", req.body);
-    const { purchaseInfo } = req.body;
+    const purchaseInfo = req.body;
+    console.log("reading purcahseInfo", purchaseInfo);
     // Validate input data
-    if (!purchaseInfo || !purchaseInfo.purchaseInfoId) {
+    if (!req.body || !req.body.purchaseId) {
       return res.status(400).json({
         success: false,
-        message: "Missing required purchase information or purchaseInfoId",
+        message: "Sales ID is required to update sales information",
       });
     }
-    const result = await changePurchaseInfoInformationSrv(purchaseInfo);
-    if (!result.success) {
-      return res.status(500).json({
-        success: false,
-        message: result.message || "Failed to update purchase information",
-      });
-    }
+    const purchaseDetails = req.body;
 
-    res.status(201).json({
-      success: true,
-      data: result,
-      message: result.message,
-    });
+
+    const result = await changePurchaseInfoInformationSrv(purchaseDetails);
+    if (!result.success) {
+      // If the service returns unsuccessful results, return detailed messages
+      return res.status(400).json({
+        success: false,
+        message: "Failed to update purchase info",
+        errors: result.results,
+      });
+    }
+    // If everything went fine, send the success response
+    res.status(200).json({ success: true, data: result, message: "Successfully updated purchase info" });
   } catch (error) {
     console.error("Error updating purchase info:", error);
     res.status(500).json({
