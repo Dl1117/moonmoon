@@ -475,9 +475,10 @@ export const changeSalesInfoInformation = async (salesDetails) => {
         // }
 
       }
-    } else if (!Array.isArray(salesInfo)) {
-      throw new Error("`salesInfo` must be an array if provided");
-    }
+    } 
+    // else if (!Array.isArray(salesInfo)) {
+    //   throw new Error("`salesInfo` must be an array if provided");
+    // }
 
     return {
       success: updateResults.every((result) => result.success),
