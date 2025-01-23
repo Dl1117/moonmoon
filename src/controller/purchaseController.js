@@ -195,7 +195,8 @@ export const changePurchaseInfoInformationController = async (req, res) => {
       });
     }
     // If everything went fine, send the success response
-    res.status(200).json({ success: true, data: result, message: "Successfully updated purchase info" });
+    //res.status(200).json({ success: true, data: result, message: "Successfully updated purchase info" });
+    res.status(200).json({ success: true, message: "Successfully updated purchase info" });
   } catch (error) {
     console.error("Error updating purchase info:", error);
     res.status(500).json({
