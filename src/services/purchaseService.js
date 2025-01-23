@@ -364,6 +364,7 @@ export const changePurchaseInfoInformationSrv = async (purchaseDetails) => {
   const {
     purchaseId,
     purchaseStatus,
+    purchaseName,
     kgPurchased,
     totalPurchasePrice,
     purchaseInfo,
@@ -381,6 +382,10 @@ export const changePurchaseInfoInformationSrv = async (purchaseDetails) => {
     const mainUpdateData = {};
     if (purchaseStatus !== null && purchaseStatus !== "") {
       mainUpdateData.purchaseStatus = purchaseStatus;
+    }
+
+    if (purchaseName !== null && purchaseName !== "") {
+      mainUpdateData.purchaseName = purchaseName;
     }
     // if (kgPurchased !== null && kgPurchased !== "") {
     //   mainUpdateData.kgPurchased = parseFloat(kgPurchased);
@@ -418,14 +423,18 @@ export const changePurchaseInfoInformationSrv = async (purchaseDetails) => {
           pricePerKg,
           kgPurchased,
           basket,
+          totalPurchasePrice
         } = info;
         const dataToUpdate = {};
 
         if (pricePerKg !== undefined && pricePerKg !== null && pricePerKg !== "") {
-          dataToUpdate.pricePerKg = parseFloat(pricePerKg);
+          dataToUpdate.pricePerKg = pricePerKg;
         }
         if (kgPurchased !== undefined && kgPurchased !== null && kgPurchased !== "") {
-          dataToUpdate.kgPurchased = parseFloat(kgPurchased);
+          dataToUpdate.kgPurchased = kgPurchased;
+        }
+        if (totalPurchasePrice !== undefined && totalPurchasePrice !== null && totalPurchasePrice !== "") {
+          dataToUpdate.totalPurchasePrice = parseFloat(totalPurchasePrice);
         }
         if (
           durianVarietyId !== undefined &&
