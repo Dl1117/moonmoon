@@ -370,153 +370,173 @@ export const changePurchaseInfoInformationSrv = async (purchaseDetails) => {
     purchaseInfo,
   } = purchaseDetails;
 
-  return await prisma.$transaction(async (tx) => {
-    const updateResults = [];
+  return await prisma.$transaction(
+    async (tx) => {
+      const updateResults = [];
 
-    // Ensure purchaseId is valid
-    if (!purchaseId) {
-      throw new Error("Purchase ID is missing or invalid.");
-    }
-
-    // Update main purchase information (purchaseStatus, kgPurchased, totalPurchasePrice)
-    const mainUpdateData = {};
-    if (purchaseStatus !== null && purchaseStatus !== "") {
-      mainUpdateData.purchaseStatus = purchaseStatus;
-    }
-
-    if (purchaseName !== null && purchaseName !== "") {
-      mainUpdateData.purchaseName = purchaseName;
-    }
-    // if (kgPurchased !== null && kgPurchased !== "") {
-    //   mainUpdateData.kgPurchased = parseFloat(kgPurchased);
-    // }
-    // if (totalPurchasePrice !== null && totalPurchasePrice !== "") {
-    //   mainUpdateData.totalPurchasePrice = parseFloat(totalPurchasePrice);
-    // }
-
-    if (Object.keys(mainUpdateData).length > 0) {
-      try {
-        await tx.purchase.update({
-          where: {
-            id: purchaseId,
-          },
-          data: mainUpdateData,
-        });
-        updateResults.push({
-          success: true,
-          message: "Main purchase information updated successfully",
-          updatedFields: mainUpdateData,
-        });
-      } catch (error) {
-        throw new Error(
-          "Failed to update main purchase information: " + error.message
-        );
+      // Ensure purchaseId is valid
+      if (!purchaseId) {
+        throw new Error("Purchase ID is missing or invalid.");
       }
-    }
 
-    // Update purchaseInfo array if provided and non-empty
-    if (Array.isArray(purchaseInfo) && purchaseInfo.length > 0) {
-      for (const info of purchaseInfo) {
-        const {
-          purchaseInfoId,
-          durianVarietyId,
-          pricePerKg,
-          kgPurchased,
-          basket,
-          totalPurchasePrice
-        } = info;
-        const dataToUpdate = {};
+      // Update main purchase information (purchaseStatus, kgPurchased, totalPurchasePrice)
+      const mainUpdateData = {};
+      if (purchaseStatus !== null && purchaseStatus !== "") {
+        mainUpdateData.purchaseStatus = purchaseStatus;
+      }
 
-        if (pricePerKg !== undefined && pricePerKg !== null && pricePerKg !== "") {
-          dataToUpdate.pricePerKg = pricePerKg;
-        }
-        if (kgPurchased !== undefined && kgPurchased !== null && kgPurchased !== "") {
-          dataToUpdate.kgPurchased = kgPurchased;
-        }
-        if (totalPurchasePrice !== undefined && totalPurchasePrice !== null && totalPurchasePrice !== "") {
-          dataToUpdate.totalPurchasePrice = parseFloat(totalPurchasePrice);
-        }
-        if (
-          durianVarietyId !== undefined &&
-          durianVarietyId !== null &&
-          durianVarietyId !== ""
-        ) {
-          dataToUpdate.durianVarietyId = durianVarietyId;
-        }
+      if (purchaseName !== null && purchaseName !== "") {
+        mainUpdateData.purchaseName = purchaseName;
+      }
+      // if (kgPurchased !== null && kgPurchased !== "") {
+      //   mainUpdateData.kgPurchased = parseFloat(kgPurchased);
+      // }
+      // if (totalPurchasePrice !== null && totalPurchasePrice !== "") {
+      //   mainUpdateData.totalPurchasePrice = parseFloat(totalPurchasePrice);
+      // }
 
-        console.log("Reading data to update for purchaseInfo...", dataToUpdate);
-
-        if (Object.keys(dataToUpdate).length > 0) {
-          try {
-            await tx.purchaseInfo.update({
-              where: {
-                id: purchaseInfoId,
-              },
-              data: dataToUpdate,
-            });
-            updateResults.push({
-              success: true,
-              message: "PurchaseInfo updated successfully",
-              updatedFields: dataToUpdate,
-            });
-          } catch (error) {
-            throw new Error(
-              "Failed to update PurchaseInfo: " + error.message
-            );
-          }
-        } else {
-          updateResults.push({
-            success: false,
-            message: "No valid fields provided for update in this purchaseInfo entry",
-            purchaseInfo: info,
+      if (Object.keys(mainUpdateData).length > 0) {
+        try {
+          await tx.purchase.update({
+            where: {
+              id: purchaseId,
+            },
+            data: mainUpdateData,
           });
+          updateResults.push({
+            success: true,
+            message: "Main purchase information updated successfully",
+            updatedFields: mainUpdateData,
+          });
+        } catch (error) {
+          throw new Error(
+            "Failed to update main purchase information: " + error.message
+          );
         }
+      }
 
-        if (Array.isArray(basket) && basket.length > 0) {
-          for (const item of basket) {
-            const { basketId, kg } = item;
-            const basketDataToUpdate = {};
+      // Update purchaseInfo array if provided and non-empty
+      if (Array.isArray(purchaseInfo) && purchaseInfo.length > 0) {
+        for (const info of purchaseInfo) {
+          const {
+            purchaseInfoId,
+            durianVarietyId,
+            pricePerKg,
+            kgPurchased,
+            basket,
+            totalPurchasePrice,
+          } = info;
+          const dataToUpdate = {};
 
-            if (kg !== undefined && kg !== null && kg !== "") {
-              basketDataToUpdate.kg = parseFloat(kg);
-            }
+          if (
+            pricePerKg !== undefined &&
+            pricePerKg !== null &&
+            pricePerKg !== ""
+          ) {
+            dataToUpdate.pricePerKg = pricePerKg.toString();
+          }
+          if (
+            kgPurchased !== undefined &&
+            kgPurchased !== null &&
+            kgPurchased !== ""
+          ) {
+            dataToUpdate.kgPurchased = kgPurchased.toString();
+          }
+          if (
+            totalPurchasePrice !== undefined &&
+            totalPurchasePrice !== null &&
+            totalPurchasePrice !== ""
+          ) {
+            dataToUpdate.totalPurchasePrice = parseFloat(totalPurchasePrice);
+          }
+          if (
+            durianVarietyId !== undefined &&
+            durianVarietyId !== null &&
+            durianVarietyId !== ""
+          ) {
+            dataToUpdate.durianVarietyId = durianVarietyId;
+          }
 
-            if (Object.keys(basketDataToUpdate).length > 0) {
-              try {
-                await tx.bucket.update({
-                  where: { id: basketId },
-                  data: basketDataToUpdate,
-                });
-                updateResults.push({
-                  success: true,
-                  message: "Basket information updated successfully",
-                  updatedFields: basketDataToUpdate,
-                });
-              } catch (error) {
-                throw new Error(
-                  "Failed to update basket information: " + error.message
-                );
-              }
-            } else {
-              updateResults.push({
-                success: false,
-                message:
-                  "No valid fields provided for update in this basket entry",
-                basket: item,
+          console.log(
+            "Reading data to update for purchaseInfo...",
+            dataToUpdate
+          );
+
+          if (Object.keys(dataToUpdate).length > 0) {
+            try {
+              await tx.purchaseInfo.update({
+                where: {
+                  id: purchaseInfoId,
+                },
+                data: dataToUpdate,
               });
+              updateResults.push({
+                success: true,
+                message: "PurchaseInfo updated successfully",
+                updatedFields: dataToUpdate,
+              });
+            } catch (error) {
+              throw new Error(
+                "Failed to update PurchaseInfo: " + error.message
+              );
+            }
+          } else {
+            updateResults.push({
+              success: false,
+              message:
+                "No valid fields provided for update in this purchaseInfo entry",
+              purchaseInfo: info,
+            });
+          }
+
+          if (Array.isArray(basket) && basket.length > 0) {
+            for (const item of basket) {
+              const { basketId, kg } = item;
+              const basketDataToUpdate = {};
+
+              if (kg !== undefined && kg !== null && kg !== "") {
+                basketDataToUpdate.kg = parseFloat(kg);
+              }
+
+              if (Object.keys(basketDataToUpdate).length > 0) {
+                try {
+                  await tx.bucket.update({
+                    where: { id: basketId },
+                    data: basketDataToUpdate,
+                  });
+                  updateResults.push({
+                    success: true,
+                    message: "Basket information updated successfully",
+                    updatedFields: basketDataToUpdate,
+                  });
+                } catch (error) {
+                  throw new Error(
+                    "Failed to update basket information: " + error.message
+                  );
+                }
+              } else {
+                updateResults.push({
+                  success: false,
+                  message:
+                    "No valid fields provided for update in this basket entry",
+                  basket: item,
+                });
+              }
             }
           }
         }
       }
+
+      return {
+        success: updateResults.every((result) => result.success),
+        results: updateResults,
+      };
+    },
+    {
+      timeout: 10000, // Increase to 10 seconds (adjust as needed)
     }
-
-    return {
-      success: updateResults.every((result) => result.success),
-      results: updateResults,
-    };
-  });
+  );
 };
-
 
 //BELOW ARE FOR NON-PRISMA
 

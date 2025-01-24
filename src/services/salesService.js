@@ -184,10 +184,16 @@ export const retrieveAllSales = async (page, size, month, week) => {
         ...info,
         durianCode: info.durianVariety?.durianCode,
         durianVariety: undefined, // Remove durianVariety object
+        salesId: undefined, // Remove salesId
+        bucket: info.bucket.map((item) => ({
+          ...item,
+          salesInfoId: undefined, // Remove salesInfoId
+          purchaseInfoId: undefined, // Remove purchaseInfoId
+        })),
       })),
       salesInvoices: sale.salesInvoices.map((invoice) => ({
         ...invoice,
-        image: invoice.image.toString("base64"), // Convert bytes to Base64 string
+        image: invoice.image ? invoice.image.toString("base64") : null, // Convert bytes to Base64 string
       })),
     }));
 
@@ -377,7 +383,8 @@ export const changeSalesInfoInformation = async (salesDetails) => {
     // Update salesInfo array if provided and non-empty
     if (Array.isArray(salesInfo) && salesInfo.length > 0) {
       for (const info of salesInfo) {
-        const { salesInfoId, pricePerKg, kgSales, durianVarietyId, basket } = info;
+        const { salesInfoId, pricePerKg, kgSales, durianVarietyId, basket } =
+          info;
         const dataToUpdate = {};
 
         // Calculate totalSalesValue if pricePerKg and kgSales are provided
@@ -464,18 +471,18 @@ export const changeSalesInfoInformation = async (salesDetails) => {
             } else {
               updateResults.push({
                 success: false,
-                message: "No valid fields provided for update in this basket entry",
+                message:
+                  "No valid fields provided for update in this basket entry",
                 basket: item,
               });
             }
           }
-        } 
+        }
         // else if (!Array.isArray(basket)) {
         //   throw new Error("`basket` must be an array if provided");
         // }
-
       }
-    } 
+    }
     // else if (!Array.isArray(salesInfo)) {
     //   throw new Error("`salesInfo` must be an array if provided");
     // }
@@ -486,7 +493,6 @@ export const changeSalesInfoInformation = async (salesDetails) => {
     };
   });
 };
-
 
 //BELOW ARE FOR NON-PRISMA
 
@@ -664,7 +670,6 @@ export const changeSalesInfoInformation = async (salesDetails) => {
 //   }
 // };
 
-
 // export const changeSalesInfoInformation = async (salesDetails) => {
 //   console.log("Reading sales details...", salesDetails);
 //   const { salesId, salesStatus, companyName, salesInfo } = salesDetails;
@@ -697,7 +702,7 @@ export const changeSalesInfoInformation = async (salesDetails) => {
 //           message: "Main sales information updated successfully",
 //           updatedFields: mainUpdateData,
 //         });
-        
+
 //       } catch (error) {
 //         throw new Error(
 //           "Failed to update main sales information: " + error.message
@@ -801,7 +806,6 @@ export const changeSalesInfoInformation = async (salesDetails) => {
 //           throw new Error("`basket` must be an array if provided");
 //         }
 
-
 //       }
 //     } else if (!Array.isArray(salesInfo)) {
 //       throw new Error("`salesInfo` must be an array if provided");
@@ -813,7 +817,6 @@ export const changeSalesInfoInformation = async (salesDetails) => {
 //     };
 //   });
 // };
-
 
 // export const retrieveOutstandingSalesSrv = async (page, size, month, week) => {
 //   try {
