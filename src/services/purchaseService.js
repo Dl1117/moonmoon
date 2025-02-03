@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { DateTime } from "luxon";
 
 const prisma = new PrismaClient();
 
@@ -536,6 +537,90 @@ export const changePurchaseInfoInformationSrv = async (purchaseDetails) => {
       timeout: 10000, // Increase to 10 seconds (adjust as needed)
     }
   );
+};
+
+export const retrieveDashboardPurchasesSrv = async () => {
+  const today = DateTime.now().setZone("Asia/Kuala_Lumpur");
+
+  console.log("hello world");
+  // Define time ranges
+  const startOfYear = today.minus({ months: 11 }).startOf("month").toISO();
+  const startOfMonth = today.minus({ weeks: 3 }).startOf("week").toISO();
+  const startOfWeek = today.minus({ days: 6 }).startOf("day").toISO();
+
+  try {
+    // Fetch purchase records
+    const purchaseData = await prisma.purchase.findMany({
+      where: {
+        purchaseDate: { gte: new Date(startOfYear) },
+      },
+      select: {
+        purchaseDate: true,
+        purchaseInfos: {
+          select: {
+            totalPurchasePrice: true,
+          },
+        },
+      },
+    });
+
+    console.log(purchaseData);
+    // Process purchase data
+    const purchasesByMonth = {};
+    const purchasesByWeek = {};
+    const purchasesByDay = {};
+
+    purchaseData.forEach((purchase) => {
+      if (!purchase.purchaseDate) return;
+
+      const date = DateTime.fromJSDate(purchase.purchaseDate).setZone(
+        "Asia/Kuala_Lumpur"
+      );
+      const monthKey = date.toFormat("yyyy-MM");
+      const weekKey = date.toFormat("yyyy-'W'WW");
+      const dayKey = date.toISODate();
+
+      const totalPurchases = purchase.purchaseInfos.reduce(
+        (sum, info) => sum + (info.totalPurchasePrice || 0),
+        0
+      );
+
+      purchasesByMonth[monthKey] =
+        (purchasesByMonth[monthKey] || 0) + totalPurchases;
+      purchasesByWeek[weekKey] =
+        (purchasesByWeek[weekKey] || 0) + totalPurchases;
+      purchasesByDay[dayKey] = (purchasesByDay[dayKey] || 0) + totalPurchases;
+    });
+
+    // Structure response
+    return {
+      success: true,
+      message: "Purchase data retrieved successfully",
+      data: {
+        yearly: Array.from({ length: 12 }, (_, i) => {
+          const month = today.minus({ months: i }).toFormat("yyyy-MM");
+          return { month, totalPurchases: purchasesByMonth[month] || 0 };
+        }).reverse(),
+
+        monthly: Array.from({ length: 4 }, (_, i) => {
+          const week = today.minus({ weeks: i }).toFormat("yyyy-'W'WW");
+          return { week, totalPurchases: purchasesByWeek[week] || 0 };
+        }).reverse(),
+
+        weekly: Array.from({ length: 7 }, (_, i) => {
+          const date = today.minus({ days: i }).toISODate();
+          return { date, totalPurchases: purchasesByDay[date] || 0 };
+        }).reverse(),
+      },
+    };
+  } catch (error) {
+    console.error("Error retrieving dashboard purchases:", error.message);
+    return {
+      success: false,
+      message: "Failed to retrieve purchase data",
+      error: error.message,
+    };
+  }
 };
 
 //BELOW ARE FOR NON-PRISMA

@@ -4,6 +4,7 @@ import {
   retrieveAllPurchases,
   retrieveOutstandingPurchasesSrv,
   changePurchaseInfoInformationSrv,
+  retrieveDashboardPurchasesSrv,
 } from "../services/purchaseService.js";
 
 // Create purchase order
@@ -128,6 +129,21 @@ export const retrieveAllPurchasesController = async (req, res) => {
   }
 };
 
+export const retrieveDashboardPurchasesController = async (req, res) => {
+  try {
+    const result = await retrieveDashboardPurchasesSrv();
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error retrieving sales:", error);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Failed to retrieve dashboard purchases",
+      });
+  }
+};
+
 //SUPERADMIN controller
 export const retrieveOutstandingPurchasesController = async (req, res) => {
   try {
@@ -184,7 +200,6 @@ export const changePurchaseInfoInformationController = async (req, res) => {
     }
     const purchaseDetails = req.body;
 
-
     const result = await changePurchaseInfoInformationSrv(purchaseDetails);
     if (!result.success) {
       // If the service returns unsuccessful results, return detailed messages
@@ -196,7 +211,9 @@ export const changePurchaseInfoInformationController = async (req, res) => {
     }
     // If everything went fine, send the success response
     //res.status(200).json({ success: true, data: result, message: "Successfully updated purchase info" });
-    res.status(200).json({ success: true, message: "Successfully updated purchase info" });
+    res
+      .status(200)
+      .json({ success: true, message: "Successfully updated purchase info" });
   } catch (error) {
     console.error("Error updating purchase info:", error);
     res.status(500).json({

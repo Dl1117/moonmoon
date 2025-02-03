@@ -4,6 +4,7 @@ import {
   retrieveAllSales,
   retrieveOutstandingSalesSrv,
   changeSalesInfoInformation,
+  retrieveDashboardSalesSrv,
 } from "../services/salesService.js";
 
 // Controller to create sales order
@@ -86,6 +87,18 @@ export const retrieveAllSalesController = async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Failed to retrieve sales" });
+  }
+};
+
+export const retrieveDashboardSalesController = async (req, res) => {
+  try {
+    const result = await retrieveDashboardSalesSrv();
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error retrieving sales:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to retrieve dashboard sales" });
   }
 };
 

@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { DateTime } from "luxon";
 
 const prisma = new PrismaClient();
 
@@ -213,6 +214,87 @@ export const retrieveAllSales = async (page, size, month, week) => {
   } catch (error) {
     console.error("Error in retrieveAllSales:", error.message);
     throw new Error("Failed to retrieve all sales. Please try again.");
+  }
+};
+
+// Retrieve all sales based on year(12month bar)/month(4 week bar)/week (7 day bar)
+export const retrieveDashboardSalesSrv = async () => {
+  const today = DateTime.now().setZone("Asia/Kuala_Lumpur");
+
+  // Define time ranges
+  const startOfYear = today.minus({ months: 11 }).startOf("month").toISO();
+  const startOfMonth = today.minus({ weeks: 3 }).startOf("week").toISO();
+  const startOfWeek = today.minus({ days: 6 }).startOf("day").toISO();
+
+  try {
+    // Fetch all relevant sales records from the database
+    const salesData = await prisma.sales.findMany({
+      where: {
+        salesDate: { gte: new Date(startOfYear) },
+      },
+      select: {
+        salesDate: true,
+        salesInfos: {
+          select: {
+            totalSalesValue: true,
+          },
+        },
+      },
+    });
+
+    // Process sales data
+    const salesByMonth = {};
+    const salesByWeek = {};
+    const salesByDay = {};
+
+    salesData.forEach((sale) => {
+      if (!sale.salesDate) return;
+
+      const date = DateTime.fromJSDate(sale.salesDate).setZone(
+        "Asia/Kuala_Lumpur"
+      );
+      const monthKey = date.toFormat("yyyy-MM"); // Format: "2024-02"
+      const weekKey = date.toFormat("yyyy-'W'WW"); // Format: "2024-W05"
+      const dayKey = date.toISODate(); // Format: "2024-02-02"
+
+      const totalSales = sale.salesInfos.reduce(
+        (sum, info) => sum + (info.totalSalesValue || 0),
+        0
+      );
+
+      salesByMonth[monthKey] = (salesByMonth[monthKey] || 0) + totalSales;
+      salesByWeek[weekKey] = (salesByWeek[weekKey] || 0) + totalSales;
+      salesByDay[dayKey] = (salesByDay[dayKey] || 0) + totalSales;
+    });
+
+    // Structure the response
+    return {
+      success: true,
+      message: "Sales data retrieved successfully",
+      data: {
+        yearly: Array.from({ length: 12 }, (_, i) => {
+          const month = today.minus({ months: i }).toFormat("yyyy-MM");
+          return { month, totalSales: salesByMonth[month] || 0 };
+        }).reverse(),
+
+        monthly: Array.from({ length: 4 }, (_, i) => {
+          const week = today.minus({ weeks: i }).toFormat("yyyy-'W'WW");
+          return { week, totalSales: salesByWeek[week] || 0 };
+        }).reverse(),
+
+        weekly: Array.from({ length: 7 }, (_, i) => {
+          const date = today.minus({ days: i }).toISODate();
+          return { date, totalSales: salesByDay[date] || 0 };
+        }).reverse(),
+      },
+    };
+  } catch (error) {
+    console.error("Error retrieving dashboard sales:", error.message);
+    return {
+      success: false,
+      message: "Failed to retrieve sales data",
+      error: error.message,
+    };
   }
 };
 
