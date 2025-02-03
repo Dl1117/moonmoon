@@ -113,7 +113,69 @@ export const getSupplierWithLorriesById = async (supplierId) => {
   });
 };
 
+//Update supplier (supplier name, contact, delete or add supplier lorry)
+export const updateSupplier = async (supplierInfo) => {
+  const { supplierId, companyName, contact, lorryPlateNumber } = supplierInfo;
+  return await prisma.$transaction(async (tx) => {
+    if (!supplierId) {
+      throw new Error("Supplier ID is missing or invalid.");
+    }
+    const mainUpdateData = {};
 
+    if (companyName !== null && companyName !== "") {
+      mainUpdateData.companyName = companyName;
+    }
+    if (contact !== null && contact !== "") {
+      mainUpdateData.contact = contact;
+    }
+
+    if (Object.keys(mainUpdateData).length > 0) {
+      try {
+        await tx.supplier.update({
+          where: {
+            id: supplierId,
+          },
+          data: mainUpdateData,
+        });
+      } catch (error) {
+        throw new Error(
+          "Failed to update supplier information: " + error.message
+        );
+      }
+    }
+
+    if (Array.isArray(lorryPlateNumber) && lorryPlateNumber.length > 0) {
+      for (const plateNumberInfo of lorryPlateNumber) {
+        const { supplierLorryId, plateNumber } = plateNumberInfo;
+
+        const dataToUpdate = {};
+
+        if (
+          plateNumber !== undefined &&
+          plateNumber !== null &&
+          plateNumber !== ""
+        ) {
+          dataToUpdate.lorryPlateNumber = plateNumber;
+        }
+
+        if (Object.keys(dataToUpdate).length > 0) {
+          try {
+            await tx.supplierLorry.update({
+              where: {
+                id: supplierLorryId, // Assuming this is the correct ID for each salesInfo entry
+              },
+              data: dataToUpdate,
+            });
+          } catch (error) {
+            throw new Error(
+              "Failed to update supplier lorry information: " + error.message
+            );
+          }
+        }
+      }
+    }
+  });
+};
 
 //BELOW ARE FOR NON-PRISMA
 // services/supplierService.js
