@@ -116,7 +116,7 @@ model SalesInfo {
   id              String         @id @default(uuid())
   pricePerKg      String?
   kgSales         String?
-  totalSalesValue Float?
+  totalSalesValue Float
   durianVarietyId String?
   salesId         String?
   sales           Sales?         @relation(fields: [salesId], references: [id])
