@@ -3,6 +3,7 @@ import {
   createSuppliersWithLorries,
   getSuppliersWithLorries,
   getSupplierWithLorriesById,
+  updateSupplierSrv,
 } from "../services/supplierService.js";
 
 // Create Supplier with Optional Lorry/Lorries
@@ -70,5 +71,21 @@ export const getSupplierById = async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Failed to retrieve supplier" });
+  }
+};
+
+export const updateSupplier = async (req, res) => {
+  try {
+    const supplierData = req.body;
+
+    console.log("reading supplier data", supplierData);
+    
+    const newSupplier = await updateSupplierSrv(supplierData);
+    res.status(201).json({ success: true, message: "Successfully updated supplier info" });
+  } catch (error) {
+    console.error("Error creating supplier:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to create supplier" });
   }
 };

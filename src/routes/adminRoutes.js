@@ -1,7 +1,7 @@
 import express from 'express';
 import { adminLogin, createAdminAccount, requestAdvancedSalaryCtr, superAdminCancellingPurchaseOrderCtr, superAdminCancellingSalesOrderCtr } from '../controller/adminController.js';
 import { fetchDurianVarieties, handleCreateOrUpdateDurianVariety } from '../controller/durianController.js';
-import { createSupplier, getAllSuppliers, getSupplierById } from '../controller/supplierController.js';
+import { createSupplier, getAllSuppliers, getSupplierById, updateSupplier } from '../controller/supplierController.js';
 import { changePurchaseInfoInformationController, createPurchaseInvoiceController, createPurchaseOrderController, retrieveAllPurchasesController, retrieveDashboardPurchasesController, retrieveOutstandingPurchasesController } from '../controller/purchaseController.js';
 import { changeSalesInfoInformationController, createSalesInvoiceController, createSalesOrderController, retrieveAllSalesController, retrieveDashboardSalesController, retrieveOutstandingSalesController } from '../controller/salesController.js';
 import { authenticateJWT, verifySuperAdminRole } from '../middleware/authMiddleware.js';
@@ -23,6 +23,7 @@ adminRoutes.get('/get-all-durian-variety', fetchDurianVarieties);
 
 // Route for handling supplier
 adminRoutes.post('/create-suppliers', createSupplier);
+adminRoutes.post('/update-supplier', updateSupplier);
 adminRoutes.get('/get-all-suppliers', getAllSuppliers);
 adminRoutes.get('/supplier/:id', getSupplierById);
 
