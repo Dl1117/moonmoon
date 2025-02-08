@@ -107,15 +107,21 @@ export const calculateDailyProfitLossSrv = async () => {
       parseFloat(expenseTotal);
 
     // Outstanding sales (sales with status 'OUTSTANDING')
-    const totalOutstandingSales = await prisma.sales.aggregate({
+    const totalOutstandingSales = await prisma.salesInfo.aggregate({
       _sum: { totalSalesValue: true },
-      where: { salesStatus: "OUTSTANDING" },
+      where: {
+        sales: {
+          salesStatus: "OUTSTANDING",
+        },
+      },
     });
 
     // Outstanding expenses (expenses not yet paid)
-    const totalOutstandingExpenses = await prisma.expenses.aggregate({
-      _sum: { expensesAmount: true },
-      where: { status: "OUTSTANDING" },
+    const totalOutstandingPurchases = await prisma.purchaseInfo.aggregate({
+      _sum: { totalPurchasePrice: true },
+      where: {
+        purchase:{ 
+          purchaseStatus: "OUTSTANDING"} },
     });
 
     // Calculate profit/loss from the start of the month to today
@@ -128,8 +134,8 @@ export const calculateDailyProfitLossSrv = async () => {
       parseFloat(expenseMonth);
 
     const outstandingSales = totalOutstandingSales._sum.totalSalesValue || 0;
-    const outstandingExpenses =
-      totalOutstandingExpenses._sum.expensesAmount || 0;
+    const outstandingPurchases =
+      totalOutstandingPurchases._sum.expensesAmount || 0;
 
     return {
       success: true,
@@ -140,7 +146,7 @@ export const calculateDailyProfitLossSrv = async () => {
         totalDailyPurchases: purchaseTotal,
         profitLossMonth,
         totalOutstandingSales: outstandingSales,
-        totalOutstandingExpenses: outstandingExpenses,
+        totalOutstandingExpenses: outstandingPurchases,
       },
     };
   } catch (error) {
@@ -180,11 +186,19 @@ export const retrieveDashboardProfitLossSrv = async () => {
       const [totalSales, totalPurchases, totalExpenses] = await Promise.all([
         prisma.salesInfo.aggregate({
           _sum: { totalSalesValue: true },
-          where: { sales: { salesDate: { gte: start.toJSDate(), lte: end.toJSDate() } } },
+          where: {
+            sales: {
+              salesDate: { gte: start.toJSDate(), lte: end.toJSDate() },
+            },
+          },
         }),
         prisma.purchaseInfo.aggregate({
           _sum: { totalPurchasePrice: true },
-          where: { purchase: { purchaseDate: { gte: start.toJSDate(), lte: end.toJSDate() } } },
+          where: {
+            purchase: {
+              purchaseDate: { gte: start.toJSDate(), lte: end.toJSDate() },
+            },
+          },
         }),
         prisma.expenses.aggregate({
           _sum: { expensesAmount: true },
