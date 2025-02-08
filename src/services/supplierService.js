@@ -114,8 +114,13 @@ export const getSupplierWithLorriesById = async (supplierId) => {
 };
 
 //Update supplier (supplier name, contact, delete or add supplier lorry)
-export const updateSupplier = async (supplierInfo) => {
+export const updateSupplierSrv = async (supplierInfo) => {
+
   const { supplierId, companyName, contact, lorryPlateNumber } = supplierInfo;
+  console.log("reading supplierId...", supplierId);
+  console.log("reading companyName...", companyName);
+  console.log("reading contact...", contact);
+  console.log("reading lorryPlateNumber...", lorryPlateNumber);
   return await prisma.$transaction(async (tx) => {
     if (!supplierId) {
       throw new Error("Supplier ID is missing or invalid.");
