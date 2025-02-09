@@ -83,13 +83,15 @@ export const getSuppliersWithLorries = async (page, size, month, week) => {
     where: {
       ...dateFilter,
     },
+    orderBy: {
+      date: "asc",
+    },
     include: {
       supplierLorries: true,
     },
   });
 
-  const totalRecords = await prisma.supplier.count();
-  const totalPages = size ? Math.ceil(totalRecords / size) : 1;
+  const totalRecords = suppliers.length;
 
   return {
     supplier: suppliers,
@@ -97,7 +99,6 @@ export const getSuppliersWithLorries = async (page, size, month, week) => {
       totalRecords,
       page: page !== null ? page : null,
       size: size || null,
-      totalPages: totalPages || null,
     },
   };
 };
@@ -115,7 +116,6 @@ export const getSupplierWithLorriesById = async (supplierId) => {
 
 //Update supplier (supplier name, contact, delete or add supplier lorry)
 export const updateSupplierSrv = async (supplierInfo) => {
-
   const { supplierId, companyName, contact, lorryPlateNumber } = supplierInfo;
   console.log("reading supplierId...", supplierId);
   console.log("reading companyName...", companyName);
@@ -163,7 +163,7 @@ export const updateSupplierSrv = async (supplierInfo) => {
           dataToUpdate.lorryPlateNumber = plateNumber;
         }
 
-        if (Object.keys(dataToUpdate).length > 0) {
+        if (supplierLorryId && Object.keys(dataToUpdate).length > 0) {
           try {
             await tx.supplierLorry.update({
               where: {
@@ -174,6 +174,31 @@ export const updateSupplierSrv = async (supplierInfo) => {
           } catch (error) {
             throw new Error(
               "Failed to update supplier lorry information: " + error.message
+            );
+          }
+        } else if (!supplierLorryId && Object.keys(dataToUpdate).length > 0) {
+          try {
+            await tx.supplierLorry.create({
+              data: {
+                supplierId,
+                lorryPlateNumber: plateNumber,
+              },
+            });
+          } catch (error) {
+            throw new Error(
+              "Failed to create supplier lorry information: " + error.message
+            );
+          }
+        } else if (supplierLorryId && Object.keys(dataToUpdate).length <= 0) {
+          try {
+            await tx.supplierLorry.delete({
+              where: {
+                id: supplierLorryId,
+              },
+            });
+          } catch (error) {
+            throw new Error(
+              "Failed to create supplier lorry information: " + error.message
             );
           }
         }

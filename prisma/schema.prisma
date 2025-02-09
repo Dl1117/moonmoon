@@ -129,7 +129,7 @@ model SalesInfo {
 model DurianVariety {
   id            String         @id @default(uuid())
   durianCode    String         @unique
-  stockQuantity Int
+  stockQuantity Int?
   salesInfo     SalesInfo[]
   purchaseInfo  PurchaseInfo[]
 }

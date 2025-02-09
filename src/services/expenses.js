@@ -219,8 +219,7 @@ export const retrieveAllGroupedExpensesService = async (
         expensesType: groupedExpenses[date],
       }));
 
-    const totalRecords = await prisma.expenses.count();
-    const totalPages = size ? Math.ceil(totalRecords / size) : 1;
+    const totalRecords = allExpenses.length;
 
     // Return grouped and sorted expenses
     return {
@@ -232,7 +231,6 @@ export const retrieveAllGroupedExpensesService = async (
           totalRecords,
           page: page !== null ? page : null,
           size: size || null,
-          totalPages: totalPages || null,
         },
       },
     };
@@ -241,8 +239,6 @@ export const retrieveAllGroupedExpensesService = async (
     throw new Error("Failed to retrieve all expenses. Please try again.");
   }
 };
-
-
 
 //BELOW ARE FOR NON-PRISMA
 
