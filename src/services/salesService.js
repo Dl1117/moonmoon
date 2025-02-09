@@ -164,6 +164,9 @@ export const retrieveAllSales = async (page, size, month, week) => {
       where: {
         ...dateFilter,
       },
+      orderBy: {
+        salesDate: "asc", // Sort in ascending order
+      },
       include: {
         salesInvoices: true,
         salesInfos: {
@@ -175,8 +178,7 @@ export const retrieveAllSales = async (page, size, month, week) => {
       },
     });
 
-    const totalRecords = await prisma.sales.count();
-    const totalPages = size ? Math.ceil(totalRecords / size) : 1;
+    const totalRecords = sales.length;
     console.log("Total records count query executed by Prisma");
     console.log(totalRecords);
     const formattedSales = sales.map((sale) => ({
@@ -207,7 +209,6 @@ export const retrieveAllSales = async (page, size, month, week) => {
           totalRecords,
           page: page !== null ? page : null,
           size: size || null,
-          totalPages: totalPages || null,
         },
       },
     };
@@ -358,6 +359,9 @@ export const retrieveOutstandingSalesSrv = async (page, size, month, week) => {
         salesStatus: "OUTSTANDING",
         ...dateFilter,
       },
+      orderBy: {
+        salesDate: "asc", // Sort in ascending order
+      },
       include: {
         salesInvoices: true,
         salesInfos: {
@@ -368,14 +372,8 @@ export const retrieveOutstandingSalesSrv = async (page, size, month, week) => {
       },
     });
 
-    const totalRecords = await prisma.sales.count({
-      where: {
-        salesStatus: "OUTSTANDING",
-      },
-    });
-    const totalPages = size ? Math.ceil(totalRecords / size) : 1;
+    const totalRecords = outstandingSales.length;
 
-    console.log("reading outstanding sales...", outstandingSales);
     // Format the response object to include relevant details
     const formattedSales = outstandingSales.map((sale) => ({
       id: sale.id,
@@ -413,7 +411,6 @@ export const retrieveOutstandingSalesSrv = async (page, size, month, week) => {
           totalRecords,
           page: page !== null ? page : null,
           size: size || null,
-          totalPages: totalPages || null,
         },
       },
     };
@@ -534,7 +531,7 @@ export const changeSalesInfoInformation = async (salesDetails) => {
               basketDataToUpdate.kg = parseFloat(kg);
             }
 
-            if (Object.keys(basketDataToUpdate).length > 0) {
+            if (basketId && Object.keys(basketDataToUpdate).length > 0) {
               try {
                 await tx.bucket.update({
                   where: { id: basketId },
@@ -548,6 +545,47 @@ export const changeSalesInfoInformation = async (salesDetails) => {
               } catch (error) {
                 throw new Error(
                   "Failed to update basket information: " + error.message
+                );
+              }
+            } else if (
+              !basketId &&
+              Object.keys(basketDataToUpdate).length > 0
+            ) {
+              try {
+                await tx.bucket.create({
+                  data: {
+                    salesInfoId,
+                    kg: parseFloat(kg)
+                  },
+                });
+                updateResults.push({
+                  success: true,
+                  message: "Basket information created successfully",
+                  updatedFields: basketDataToUpdate,
+                });
+              } catch (error) {
+                throw new Error(
+                  "Failed to create basket information: " + error.message
+                );
+              }
+            }else if (
+              basketId &&
+              Object.keys(basketDataToUpdate).length <= 0
+            ) {
+              try {
+                await tx.bucket.delete({
+                  where: {
+                    id: basketId
+                  }
+                });
+                updateResults.push({
+                  success: true,
+                  message: "Basket information delete successfully",
+                  updatedFields: basketDataToUpdate,
+                });
+              } catch (error) {
+                throw new Error(
+                  "Failed to create basket information: " + error.message
                 );
               }
             } else {

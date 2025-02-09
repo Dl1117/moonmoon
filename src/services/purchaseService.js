@@ -170,6 +170,9 @@ export const retrieveAllPurchases = async (page, size, month, week) => {
       where: {
         ...dateFilter,
       },
+      orderBy: {
+        purchaseDate: "asc", // Sort in ascending order
+      },
       include: {
         purchaseInfos: {
           include: {
@@ -183,8 +186,7 @@ export const retrieveAllPurchases = async (page, size, month, week) => {
       },
     });
 
-    const totalRecords = await prisma.purchase.count();
-    const totalPages = size ? Math.ceil(totalRecords / size) : 1;
+    const totalRecords = purchases.length;
 
     // Convert each image buffer to Base64 for each invoice in each purchase
     const formattedPurchases = purchases.map(
@@ -215,7 +217,6 @@ export const retrieveAllPurchases = async (page, size, month, week) => {
           totalRecords,
           page: page !== null ? page : null,
           size: size || null,
-          totalPages: totalPages || null,
         },
       },
     };
@@ -294,6 +295,9 @@ export const retrieveOutstandingPurchasesSrv = async (
         purchaseStatus: "OUTSTANDING",
         ...dateFilter,
       },
+      orderBy: {
+        purchaseDate: "asc", // Sort in ascending order
+      },
       include: {
         purchaseInfos: {
           include: {
@@ -303,12 +307,7 @@ export const retrieveOutstandingPurchasesSrv = async (
         purchaseInvoices: true,
       },
     });
-    const totalRecords = await prisma.purchase.count({
-      where: {
-        purchaseStatus: "OUTSTANDING",
-      },
-    });
-    const totalPages = size ? Math.ceil(totalRecords / size) : 1;
+    const totalRecords = outStandingPurchases.length;
 
     // Format the response object to include relevant details
     const formattedPurchases = outStandingPurchases.map((purchase) => ({
@@ -346,7 +345,6 @@ export const retrieveOutstandingPurchasesSrv = async (
           totalRecords,
           page: page !== null ? page : null,
           size: size || null,
-          totalPages: totalPages || null,
         },
       },
     };
@@ -499,7 +497,7 @@ export const changePurchaseInfoInformationSrv = async (purchaseDetails) => {
                 basketDataToUpdate.kg = parseFloat(kg);
               }
 
-              if (Object.keys(basketDataToUpdate).length > 0) {
+              if (basketId && Object.keys(basketDataToUpdate).length > 0) {
                 try {
                   await tx.bucket.update({
                     where: { id: basketId },
@@ -515,7 +513,43 @@ export const changePurchaseInfoInformationSrv = async (purchaseDetails) => {
                     "Failed to update basket information: " + error.message
                   );
                 }
-              } else {
+              } else if (!basketId && Object.keys(basketDataToUpdate).length > 0) {
+                try {
+                  const newBasket = await tx.bucket.create({
+                    data: {
+                      purchaseInfoId: purchaseInfoId,
+                      kg: parseFloat(kg)
+                    }
+                  });
+                  updateResults.push({
+                    success: true,
+                    message: "New basket created successfully",
+                    newBasket,
+                  });
+                } catch (error) {
+                  throw new Error("Failed to create basket: " + error.message);
+                }
+              }else if (
+                basketId &&
+                Object.keys(basketDataToUpdate).length <= 0
+              ) {
+                try {
+                  await tx.bucket.delete({
+                    where: {
+                      id: basketId
+                    }
+                  });
+                  updateResults.push({
+                    success: true,
+                    message: "Basket information delete successfully",
+                    updatedFields: basketDataToUpdate,
+                  });
+                } catch (error) {
+                  throw new Error(
+                    "Failed to create basket information: " + error.message
+                  );
+                }
+              }else {
                 updateResults.push({
                   success: false,
                   message:

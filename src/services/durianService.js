@@ -3,10 +3,12 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export const createOrUpdateDurianVariety = async (durianDto) => {
-  const { durianCode, stockQuantity: stockQuantityInput } = durianDto;
+  //const { durianCode, stockQuantity: stockQuantityInput } = durianDto;
+
+  const { durianCode } = durianDto;
 
   // Convert stockQuantity to an integer if it’s a string
-  let stockQuantity = parseInt(stockQuantityInput, 10);
+  //let stockQuantity = parseInt(stockQuantityInput, 10);
 
   return await prisma.$transaction(async (tx) => {
     // Check if the durian code exists
@@ -16,16 +18,16 @@ export const createOrUpdateDurianVariety = async (durianDto) => {
 
     if (durianCodeExist) {
       // Update stock quantity if durian code exists
-      const updatedDurian = await tx.durianVariety.update({
-        where: { durianCode },
-        data: {
-          stockQuantity: durianCodeExist.stockQuantity + stockQuantity,
-        },
-      });
+      // const updatedDurian = await tx.durianVariety.update({
+      //   where: { durianCode },
+      //   data: {
+      //     stockQuantity: durianCodeExist.stockQuantity + stockQuantity,
+      //   },
+      // });
 
       // Return response with message indicating an update
       return {
-        message: "Durian code exists; stock quantity updated successfully.",
+        message: "Durian already exist",
         data: updatedDurian,
       };
     } else {
@@ -33,7 +35,7 @@ export const createOrUpdateDurianVariety = async (durianDto) => {
       const newDurian = await tx.durianVariety.create({
         data: {
           durianCode,
-          stockQuantity,
+          //stockQuantity,
         },
       });
 
