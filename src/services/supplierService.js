@@ -9,7 +9,7 @@ export const createSuppliersWithLorries = async (suppliers) => {
     prisma.supplier.create({
       data: {
         companyName,
-        contact,
+        contact: contact || null,
         supplierLorries: {
           create:
             lorries?.map((lorry) => ({

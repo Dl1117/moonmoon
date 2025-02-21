@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 // Create sales order with sales info
 export const createSalesOrder = async (salesInfos, invoiceImages) => {
   try {
-    const { companyName, salesStatus, salesInfo } = salesInfos;
+    const { companyName, salesStatus, salesDate, salesInfo } = salesInfos;
 
     if (
       !companyName ||
@@ -28,7 +28,7 @@ export const createSalesOrder = async (salesInfos, invoiceImages) => {
         data: {
           companyName,
           salesStatus,
-          salesDate: new Date(),
+          salesDate: salesDate,
           salesInfos: {
             create: salesInfo.map(
               ({
@@ -555,7 +555,7 @@ export const changeSalesInfoInformation = async (salesDetails) => {
                 await tx.bucket.create({
                   data: {
                     salesInfoId,
-                    kg: parseFloat(kg)
+                    kg: parseFloat(kg),
                   },
                 });
                 updateResults.push({
@@ -568,15 +568,15 @@ export const changeSalesInfoInformation = async (salesDetails) => {
                   "Failed to create basket information: " + error.message
                 );
               }
-            }else if (
+            } else if (
               basketId &&
               Object.keys(basketDataToUpdate).length <= 0
             ) {
               try {
                 await tx.bucket.delete({
                   where: {
-                    id: basketId
-                  }
+                    id: basketId,
+                  },
                 });
                 updateResults.push({
                   success: true,
