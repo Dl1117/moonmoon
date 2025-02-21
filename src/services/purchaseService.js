@@ -13,6 +13,7 @@ export const createPurchaseOrder = async (purchaseInfos, invoiceImages) => {
       supplierId,
       supplierLorryId,
       purchaseStatus,
+      purchaseDate,
       purchaseInfo,
     } = purchaseInfos;
 
@@ -28,7 +29,7 @@ export const createPurchaseOrder = async (purchaseInfos, invoiceImages) => {
           supplierId,
           supplierLorryId,
           purchaseStatus,
-          purchaseDate: new Date(),
+          purchaseDate: purchaseDate,
           // Create purchase info records
           purchaseInfos: {
             create: purchaseInfo.map(
@@ -513,13 +514,16 @@ export const changePurchaseInfoInformationSrv = async (purchaseDetails) => {
                     "Failed to update basket information: " + error.message
                   );
                 }
-              } else if (!basketId && Object.keys(basketDataToUpdate).length > 0) {
+              } else if (
+                !basketId &&
+                Object.keys(basketDataToUpdate).length > 0
+              ) {
                 try {
                   const newBasket = await tx.bucket.create({
                     data: {
                       purchaseInfoId: purchaseInfoId,
-                      kg: parseFloat(kg)
-                    }
+                      kg: parseFloat(kg),
+                    },
                   });
                   updateResults.push({
                     success: true,
@@ -529,15 +533,15 @@ export const changePurchaseInfoInformationSrv = async (purchaseDetails) => {
                 } catch (error) {
                   throw new Error("Failed to create basket: " + error.message);
                 }
-              }else if (
+              } else if (
                 basketId &&
                 Object.keys(basketDataToUpdate).length <= 0
               ) {
                 try {
                   await tx.bucket.delete({
                     where: {
-                      id: basketId
-                    }
+                      id: basketId,
+                    },
                   });
                   updateResults.push({
                     success: true,
@@ -549,7 +553,7 @@ export const changePurchaseInfoInformationSrv = async (purchaseDetails) => {
                     "Failed to create basket information: " + error.message
                   );
                 }
-              }else {
+              } else {
                 updateResults.push({
                   success: false,
                   message:
