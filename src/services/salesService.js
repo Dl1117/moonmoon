@@ -23,12 +23,14 @@ export const createSalesOrder = async (salesInfos, invoiceImages) => {
       ?.map((image) => image?.buffer)
       .filter(Boolean); // Ensure only valid image buffers are processed
 
+    const formattedSalesDate = new Date(salesDate); // Convert salesDate
+
     return await prisma.$transaction([
       prisma.sales.create({
         data: {
           companyName,
           salesStatus,
-          salesDate: salesDate,
+          salesDate: formattedSalesDate,
           salesInfos: {
             create: salesInfo.map(
               ({
@@ -424,196 +426,199 @@ export const changeSalesInfoInformation = async (salesDetails) => {
   console.log("reading sales details...", salesDetails);
   const { salesId, salesStatus, companyName, salesInfo } = salesDetails;
 
-  return await prisma.$transaction(async (tx) => {
-    const updateResults = [];
-    // Ensure salesId is valid
-    if (!salesId) {
-      throw new Error("Sales ID is missing or invalid.");
-    }
-    // Update main sales information (salesStatus and companyName)
-    const mainUpdateData = {};
-    if (salesStatus !== null && salesStatus !== "") {
-      mainUpdateData.salesStatus = salesStatus;
-    }
-    if (companyName !== null && companyName !== "") {
-      mainUpdateData.companyName = companyName;
-    }
-
-    if (Object.keys(mainUpdateData).length > 0) {
-      try {
-        await tx.sales.update({
-          where: {
-            id: salesId,
-          },
-          data: mainUpdateData,
-        });
-        updateResults.push({
-          success: true,
-          message: "Main sales information updated successfully",
-          updatedFields: mainUpdateData,
-        });
-      } catch (error) {
-        throw new Error(
-          "Failed to update main sales information: " + error.message
-        );
+  return await prisma.$transaction(
+    async (tx) => {
+      const updateResults = [];
+      // Ensure salesId is valid
+      if (!salesId) {
+        throw new Error("Sales ID is missing or invalid.");
       }
-    }
+      // Update main sales information (salesStatus and companyName)
+      const mainUpdateData = {};
+      if (salesStatus !== null && salesStatus !== "") {
+        mainUpdateData.salesStatus = salesStatus;
+      }
+      if (companyName !== null && companyName !== "") {
+        mainUpdateData.companyName = companyName;
+      }
 
-    // Update salesInfo array if provided and non-empty
-    if (Array.isArray(salesInfo) && salesInfo.length > 0) {
-      for (const info of salesInfo) {
-        const { salesInfoId, pricePerKg, kgSales, durianVarietyId, basket } =
-          info;
-        const dataToUpdate = {};
-
-        // Calculate totalSalesValue if pricePerKg and kgSales are provided
-        if (
-          pricePerKg !== undefined &&
-          pricePerKg !== null &&
-          pricePerKg !== ""
-        ) {
-          dataToUpdate.pricePerKg = pricePerKg.toString();
-        }
-        if (kgSales !== undefined && kgSales !== null && kgSales !== "") {
-          dataToUpdate.kgSales = kgSales.toString();
-        }
-
-        // Calculate totalSalesValue only if both pricePerKg and kgSales are available
-        if (dataToUpdate.pricePerKg && dataToUpdate.kgSales) {
-          const price = parseFloat(dataToUpdate.pricePerKg);
-          const kg = parseFloat(dataToUpdate.kgSales);
-          if (!isNaN(price) && !isNaN(kg)) {
-            dataToUpdate.totalSalesValue = price * kg;
-          }
-        }
-        if (
-          durianVarietyId !== undefined &&
-          durianVarietyId !== null &&
-          durianVarietyId !== ""
-        ) {
-          dataToUpdate.durianVarietyId = durianVarietyId;
-        }
-
-        console.log("reading data to update...", dataToUpdate);
-
-        if (Object.keys(dataToUpdate).length > 0) {
-          try {
-            await tx.salesInfo.update({
-              where: {
-                id: salesInfoId, // Assuming this is the correct ID for each salesInfo entry
-              },
-              data: dataToUpdate,
-            });
-            updateResults.push({
-              success: true,
-              message: "Sales information updated successfully",
-              updatedFields: dataToUpdate,
-            });
-          } catch (error) {
-            throw new Error(
-              "Failed to update sales information: " + error.message
-            );
-          }
-        } else {
-          updateResults.push({
-            success: false,
-            message: "No valid fields provided for update in this entry",
-            salesInfo: info,
+      if (Object.keys(mainUpdateData).length > 0) {
+        try {
+          await tx.sales.update({
+            where: {
+              id: salesId,
+            },
+            data: mainUpdateData,
           });
+          updateResults.push({
+            success: true,
+            message: "Main sales information updated successfully",
+            updatedFields: mainUpdateData,
+          });
+        } catch (error) {
+          throw new Error(
+            "Failed to update main sales information: " + error.message
+          );
         }
+      }
 
-        if (Array.isArray(basket) && basket.length > 0) {
-          for (const item of basket) {
-            const { basketId, kg } = item;
-            const basketDataToUpdate = {};
+      // Update salesInfo array if provided and non-empty
+      if (Array.isArray(salesInfo) && salesInfo.length > 0) {
+        for (const info of salesInfo) {
+          const { salesInfoId, pricePerKg, kgSales, durianVarietyId, basket } =
+            info;
+          const dataToUpdate = {};
 
-            if (kg !== undefined && kg !== null && kg !== "") {
-              basketDataToUpdate.kg = parseFloat(kg);
-            }
+          // Calculate totalSalesValue if pricePerKg and kgSales are provided
+          if (
+            pricePerKg !== undefined &&
+            pricePerKg !== null &&
+            pricePerKg !== ""
+          ) {
+            dataToUpdate.pricePerKg = pricePerKg.toString();
+          }
+          if (kgSales !== undefined && kgSales !== null && kgSales !== "") {
+            dataToUpdate.kgSales = kgSales.toString();
+          }
 
-            if (basketId && Object.keys(basketDataToUpdate).length > 0) {
-              try {
-                await tx.bucket.update({
-                  where: { id: basketId },
-                  data: basketDataToUpdate,
-                });
-                updateResults.push({
-                  success: true,
-                  message: "Basket information updated successfully",
-                  updatedFields: basketDataToUpdate,
-                });
-              } catch (error) {
-                throw new Error(
-                  "Failed to update basket information: " + error.message
-                );
-              }
-            } else if (
-              !basketId &&
-              Object.keys(basketDataToUpdate).length > 0
-            ) {
-              try {
-                await tx.bucket.create({
-                  data: {
-                    salesInfoId,
-                    kg: parseFloat(kg),
-                  },
-                });
-                updateResults.push({
-                  success: true,
-                  message: "Basket information created successfully",
-                  updatedFields: basketDataToUpdate,
-                });
-              } catch (error) {
-                throw new Error(
-                  "Failed to create basket information: " + error.message
-                );
-              }
-            } else if (
-              basketId &&
-              Object.keys(basketDataToUpdate).length <= 0
-            ) {
-              try {
-                await tx.bucket.delete({
-                  where: {
-                    id: basketId,
-                  },
-                });
-                updateResults.push({
-                  success: true,
-                  message: "Basket information delete successfully",
-                  updatedFields: basketDataToUpdate,
-                });
-              } catch (error) {
-                throw new Error(
-                  "Failed to create basket information: " + error.message
-                );
-              }
-            } else {
-              updateResults.push({
-                success: false,
-                message:
-                  "No valid fields provided for update in this basket entry",
-                basket: item,
-              });
+          // Calculate totalSalesValue only if both pricePerKg and kgSales are available
+          if (dataToUpdate.pricePerKg && dataToUpdate.kgSales) {
+            const price = parseFloat(dataToUpdate.pricePerKg);
+            const kg = parseFloat(dataToUpdate.kgSales);
+            if (!isNaN(price) && !isNaN(kg)) {
+              dataToUpdate.totalSalesValue = price * kg;
             }
           }
-        }
-        // else if (!Array.isArray(basket)) {
-        //   throw new Error("`basket` must be an array if provided");
-        // }
-      }
-    }
-    // else if (!Array.isArray(salesInfo)) {
-    //   throw new Error("`salesInfo` must be an array if provided");
-    // }
+          if (
+            durianVarietyId !== undefined &&
+            durianVarietyId !== null &&
+            durianVarietyId !== ""
+          ) {
+            dataToUpdate.durianVarietyId = durianVarietyId;
+          }
 
-    return {
-      success: updateResults.every((result) => result.success),
-      results: updateResults,
-    };
-  }, {
-    timeout: 10000 // 10 seconds
-  });
+          console.log("reading data to update...", dataToUpdate);
+
+          if (Object.keys(dataToUpdate).length > 0) {
+            try {
+              await tx.salesInfo.update({
+                where: {
+                  id: salesInfoId, // Assuming this is the correct ID for each salesInfo entry
+                },
+                data: dataToUpdate,
+              });
+              updateResults.push({
+                success: true,
+                message: "Sales information updated successfully",
+                updatedFields: dataToUpdate,
+              });
+            } catch (error) {
+              throw new Error(
+                "Failed to update sales information: " + error.message
+              );
+            }
+          } else {
+            updateResults.push({
+              success: false,
+              message: "No valid fields provided for update in this entry",
+              salesInfo: info,
+            });
+          }
+
+          if (Array.isArray(basket) && basket.length > 0) {
+            for (const item of basket) {
+              const { basketId, kg } = item;
+              const basketDataToUpdate = {};
+
+              if (kg !== undefined && kg !== null && kg !== "") {
+                basketDataToUpdate.kg = parseFloat(kg);
+              }
+
+              if (basketId && Object.keys(basketDataToUpdate).length > 0) {
+                try {
+                  await tx.bucket.update({
+                    where: { id: basketId },
+                    data: basketDataToUpdate,
+                  });
+                  updateResults.push({
+                    success: true,
+                    message: "Basket information updated successfully",
+                    updatedFields: basketDataToUpdate,
+                  });
+                } catch (error) {
+                  throw new Error(
+                    "Failed to update basket information: " + error.message
+                  );
+                }
+              } else if (
+                !basketId &&
+                Object.keys(basketDataToUpdate).length > 0
+              ) {
+                try {
+                  await tx.bucket.create({
+                    data: {
+                      salesInfoId,
+                      kg: parseFloat(kg),
+                    },
+                  });
+                  updateResults.push({
+                    success: true,
+                    message: "Basket information created successfully",
+                    updatedFields: basketDataToUpdate,
+                  });
+                } catch (error) {
+                  throw new Error(
+                    "Failed to create basket information: " + error.message
+                  );
+                }
+              } else if (
+                basketId &&
+                Object.keys(basketDataToUpdate).length <= 0
+              ) {
+                try {
+                  await tx.bucket.delete({
+                    where: {
+                      id: basketId,
+                    },
+                  });
+                  updateResults.push({
+                    success: true,
+                    message: "Basket information delete successfully",
+                    updatedFields: basketDataToUpdate,
+                  });
+                } catch (error) {
+                  throw new Error(
+                    "Failed to create basket information: " + error.message
+                  );
+                }
+              } else {
+                updateResults.push({
+                  success: false,
+                  message:
+                    "No valid fields provided for update in this basket entry",
+                  basket: item,
+                });
+              }
+            }
+          }
+          // else if (!Array.isArray(basket)) {
+          //   throw new Error("`basket` must be an array if provided");
+          // }
+        }
+      }
+      // else if (!Array.isArray(salesInfo)) {
+      //   throw new Error("`salesInfo` must be an array if provided");
+      // }
+
+      return {
+        success: updateResults.every((result) => result.success),
+        results: updateResults,
+      };
+    },
+    {
+      timeout: 10000, // 10 seconds
+    }
+  );
 };
 
 //BELOW ARE FOR NON-PRISMA
