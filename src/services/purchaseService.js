@@ -365,6 +365,7 @@ export const changePurchaseInfoInformationSrv = async (purchaseDetails) => {
   const {
     purchaseId,
     purchaseStatus,
+    purchaseDate,
     purchaseName,
     kgPurchased,
     totalPurchasePrice,
@@ -388,6 +389,11 @@ export const changePurchaseInfoInformationSrv = async (purchaseDetails) => {
 
       if (purchaseName !== null && purchaseName !== "") {
         mainUpdateData.purchaseName = purchaseName;
+      }
+
+      if (purchaseDate !== null && purchaseDate !== "") {
+        const formattedPurchaseDate = new Date(purchaseDate); // Convert salesDate
+        mainUpdateData.purchaseDate = formattedPurchaseDate;
       }
       // if (kgPurchased !== null && kgPurchased !== "") {
       //   mainUpdateData.kgPurchased = parseFloat(kgPurchased);

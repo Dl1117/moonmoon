@@ -424,7 +424,8 @@ export const retrieveOutstandingSalesSrv = async (page, size, month, week) => {
 
 export const changeSalesInfoInformation = async (salesDetails) => {
   console.log("reading sales details...", salesDetails);
-  const { salesId, salesStatus, companyName, salesInfo } = salesDetails;
+  const { salesId, salesStatus, salesDate, companyName, salesInfo } =
+    salesDetails;
 
   return await prisma.$transaction(
     async (tx) => {
@@ -440,6 +441,11 @@ export const changeSalesInfoInformation = async (salesDetails) => {
       }
       if (companyName !== null && companyName !== "") {
         mainUpdateData.companyName = companyName;
+      }
+
+      if (salesDate !== null && salesDate !== "") {
+        const formattedSalesDate = new Date(salesDate); // Convert salesDate
+        mainUpdateData.salesDate = formattedSalesDate;
       }
 
       if (Object.keys(mainUpdateData).length > 0) {
