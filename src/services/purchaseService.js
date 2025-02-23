@@ -22,6 +22,7 @@ export const createPurchaseOrder = async (purchaseInfos, invoiceImages) => {
       ?.map((image) => image?.buffer)
       .filter(Boolean); // Ensure only valid image buffers are processed
 
+    const formattedPurchaseDate = new Date(purchaseDate); // Convert salesDate
     return await prisma.$transaction([
       prisma.purchase.create({
         data: {
@@ -29,7 +30,7 @@ export const createPurchaseOrder = async (purchaseInfos, invoiceImages) => {
           supplierId,
           supplierLorryId,
           purchaseStatus,
-          purchaseDate: purchaseDate,
+          purchaseDate: formattedPurchaseDate,
           // Create purchase info records
           purchaseInfos: {
             create: purchaseInfo.map(
