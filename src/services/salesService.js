@@ -611,6 +611,8 @@ export const changeSalesInfoInformation = async (salesDetails) => {
       success: updateResults.every((result) => result.success),
       results: updateResults,
     };
+  }, {
+    timeout: 10000 // 10 seconds
   });
 };
 
