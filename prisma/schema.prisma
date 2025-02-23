@@ -75,7 +75,7 @@ model PurchaseInfo {
 model Supplier {
   id              String          @id @default(uuid())
   companyName     String
-  contact         String
+  contact         String?
   date            DateTime?
   supplierLorries SupplierLorry[]
   purchase        Purchase[]
